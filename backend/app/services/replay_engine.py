@@ -17,13 +17,23 @@ Requirements:
 
 from typing import Dict, Any
 from app.db.models import Incident
+from app.integrations.erpnext_client import ERPNextClient
 
 
 class ReplayEngine:
-    """Service for analyzing financial incidents."""
+    """Service for analyzing financial incidents with ERPNext integration."""
     
-    @staticmethod
-    def analyze_incident(incident: Incident) -> Dict[str, Any]:
+    def __init__(self, erpnext_client: ERPNextClient = None):
+        """
+        Initialize ReplayEngine with optional ERPNextClient dependency.
+        
+        Args:
+            erpnext_client: ERPNextClient instance for retrieving invoice and order data.
+                          If None, a new instance will be created.
+        """
+        self.erpnext_client = erpnext_client or ERPNextClient()
+    
+    def analyze_incident(self, incident: Incident) -> Dict[str, Any]:
         """
         Analyze an incident based on its type.
         
@@ -34,47 +44,71 @@ class ReplayEngine:
             Dictionary containing summary, details, conclusion, and decision
         """
         if incident.incident_type == "Pricing_Issue":
-            return ReplayEngine._analyze_pricing_issue(incident)
+            return self._analyze_pricing_issue(incident)
         elif incident.incident_type == "Duplicate_Invoice":
-            return ReplayEngine._analyze_duplicate_invoice(incident)
+            return self._analyze_duplicate_invoice(incident)
         else:
-            return ReplayEngine._analyze_generic(incident)
+            return self._analyze_generic(incident)
     
-    @staticmethod
-    def _analyze_pricing_issue(incident: Incident) -> Dict[str, Any]:
+    def _analyze_pricing_issue(self, incident: Incident) -> Dict[str, Any]:
         """
-        Analyze a pricing issue incident.
+        Analyze a pricing issue incident using ERPNext data.
+        
+        Retrieves invoice and sales order data from ERPNext client,
+        compares amounts, and determines if the variance is acceptable.
         
         Args:
             incident: The Incident object
         
         Returns:
-            Analysis dictionary
+            Analysis dictionary with summary, details, conclusion, and decision
         """
-        # Define baseline values
-        expected_amount = 5000
-        invoice_amount = 5750
+        # Extract invoice and order IDs from description or use defaults
+        # For demo purposes, we'll use mock IDs that the mock client recognizes
+        invoice_id = "INV-001"
+        sales_order_id = "SO-001"
+        
+        # Retrieve data from ERPNext client (mock, no real HTTP requests)
+        invoice_data = self.erpnext_client.get_invoice(invoice_id)
+        sales_order_data = self.erpnext_client.get_sales_order(sales_order_id)
+        
+        # Extract amounts
+        invoice_amount = invoice_data.get("total_amount", 0)
+        expected_amount = sales_order_data.get("expected_amount", 0)
+        currency = invoice_data.get("currency", "USD")
+        
+        # Calculate difference
+        difference = invoice_amount - expected_amount
         
         # Calculate percentage difference
-        difference = invoice_amount - expected_amount
-        percentage_difference = (difference / expected_amount) * 100
+        if expected_amount > 0:
+            percentage_difference = (difference / expected_amount) * 100
+        else:
+            percentage_difference = 0
         
         # Determine decision based on percentage
-        if percentage_difference <= 20:
+        if abs(percentage_difference) <= 20:
             decision = "APPROVED_WITH_RISK"
         else:
             decision = "REJECTED"
         
+        # Build response
         summary = f"Invoice exceeds expected amount by {percentage_difference:.1f}%"
         details = (
-            f"Expected amount: ${expected_amount:,.2f}\n"
-            f"Invoice amount: ${invoice_amount:,.2f}\n"
-            f"Difference: ${difference:,.2f} ({percentage_difference:.1f}%)"
+            f"Invoice ID: {invoice_id}\n"
+            f"Sales Order ID: {sales_order_id}\n"
+            f"Expected amount: {currency} {expected_amount:,.2f}\n"
+            f"Invoice amount: {currency} {invoice_amount:,.2f}\n"
+            f"Difference: {currency} {difference:,.2f} ({percentage_difference:.1f}%)\n"
+            f"Invoice Status: {invoice_data.get('status', 'Unknown')}\n"
+            f"Order Status: {sales_order_data.get('status', 'Unknown')}"
         )
         conclusion = (
             f"Decision: {decision}. "
-            f"The invoice amount is within acceptable variance threshold (20%). "
-            f"Requires manual review for compliance."
+            f"The invoice amount is {abs(percentage_difference):.1f}% "
+            f"{'above' if difference > 0 else 'below'} the expected amount. "
+            f"Variance is {'within' if abs(percentage_difference) <= 20 else 'outside'} "
+            f"acceptable threshold (20%). Requires manual review for compliance."
         )
         
         return {
@@ -84,8 +118,7 @@ class ReplayEngine:
             "decision": decision
         }
     
-    @staticmethod
-    def _analyze_duplicate_invoice(incident: Incident) -> Dict[str, Any]:
+    def _analyze_duplicate_invoice(self, incident: Incident) -> Dict[str, Any]:
         """
         Analyze a duplicate invoice incident.
         
@@ -125,8 +158,7 @@ class ReplayEngine:
             "decision": decision
         }
     
-    @staticmethod
-    def _analyze_generic(incident: Incident) -> Dict[str, Any]:
+    def _analyze_generic(self, incident: Incident) -> Dict[str, Any]:
         """
         Analyze a generic incident.
         

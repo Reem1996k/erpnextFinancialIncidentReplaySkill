@@ -14,7 +14,7 @@ Requirements:
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from app.db.database import Base, engine
-from app.api.incidents import router as incidents_router
+from app.api.incidents import router as incidents_router, ui_router as ui_incidents_router
 app = FastAPI(
     title="ERPNext Financial Incident Replay",
     description="API for replaying financial incidents in ERPNext",
@@ -24,7 +24,9 @@ app = FastAPI(
 # Create all database tables on startup
 Base.metadata.create_all(bind=engine)
 
+# Include routers
 app.include_router(incidents_router)
+app.include_router(ui_incidents_router)
 
 @app.get("/health")
 def health():

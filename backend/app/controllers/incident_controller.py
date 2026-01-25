@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 from app.db.models import Incident
 from app.models.incident import IncidentCreate
 from app.services.replay_engine import ReplayEngine
+from app.integrations.erpnext_client import ERPNextClient
+from fastapi import HTTPException, status
 
 
 def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
@@ -28,6 +30,17 @@ def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
     Returns:
         Created Incident object
     """
+    existing = (
+        db.query(Incident)
+        .filter(Incident.erp_reference == incident_data.erp_reference)
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Incident with ERP reference '{incident_data.erp_reference}' already exists"
+        )
     db_incident = Incident(
         erp_reference=incident_data.erp_reference,
         incident_type=incident_data.incident_type,
@@ -69,8 +82,12 @@ def run_replay_for_incident(incident_id: int, db: Session) -> Incident | None:
     if incident is None:
         return None
     
+    # Initialize ERPNext client and ReplayEngine
+    erpnext_client = ERPNextClient()
+    replay_engine = ReplayEngine(erpnext_client)
+    
     # Use ReplayEngine to analyze the incident
-    analysis = ReplayEngine.analyze_incident(incident)
+    analysis = replay_engine.analyze_incident(incident)
     
     # Populate replay fields from analysis
     incident.replay_summary = analysis["summary"]
