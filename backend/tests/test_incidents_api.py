@@ -165,7 +165,8 @@ def test_replay_incident_success():
     
     # Assert replay fields are populated
     assert data["replay_summary"] is not None
-    assert data["replay_summary"] == "Customer charged more than expected"
+    assert "exceeds expected amount" in data["replay_summary"].lower()
+    assert "15.0%" in data["replay_summary"]
     assert data["replay_details"] is not None
     assert data["replay_conclusion"] is not None
     assert data["replayed_at"] is not None

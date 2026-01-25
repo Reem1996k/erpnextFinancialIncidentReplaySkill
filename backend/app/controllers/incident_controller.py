@@ -14,6 +14,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.db.models import Incident
 from app.models.incident import IncidentCreate
+from app.services.replay_engine import ReplayEngine
 
 
 def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
@@ -68,14 +69,18 @@ def run_replay_for_incident(incident_id: int, db: Session) -> Incident | None:
     if incident is None:
         return None
     
-    # Populate replay fields with mock analysis
-    incident.replay_summary = "Customer charged more than expected"
-    incident.replay_details = "Invoice amount exceeds purchase order by 15%. Comparison: Invoice #12345 ($5,750) vs PO #67890 ($5,000)"
-    incident.replay_conclusion = "Technically valid but requires manual review. Possible data entry error or undocumented surcharge."
+    # Use ReplayEngine to analyze the incident
+    analysis = ReplayEngine.analyze_incident(incident)
+    
+    # Populate replay fields from analysis
+    incident.replay_summary = analysis["summary"]
+    incident.replay_details = analysis["details"]
+    incident.replay_conclusion = analysis["conclusion"]
     incident.status = "ANALYZED"
     incident.replayed_at = datetime.utcnow()
     
     db.commit()
     db.refresh(incident)
     return incident
+
 
