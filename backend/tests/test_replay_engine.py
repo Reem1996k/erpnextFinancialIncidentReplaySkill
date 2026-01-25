@@ -103,3 +103,37 @@ def test_replay_engine_analysis_structure():
     assert len(analysis["conclusion"]) > 0
     assert isinstance(analysis["decision"], str)
     assert len(analysis["decision"]) > 0
+
+
+def test_replay_engine_duplicate_invoice_analysis():
+    """Test ReplayEngine analysis for Duplicate_Invoice incident type."""
+    # Create a mock incident
+    incident = Incident(
+        id=4,
+        erp_reference="ERR-DUPLICATE-001",
+        incident_type="Duplicate_Invoice",
+        status="OPEN",
+        description="Duplicate invoice from vendor XYZ",
+        created_at=None
+    )
+    
+    # Analyze the incident
+    analysis = ReplayEngine.analyze_incident(incident)
+    
+    # Verify decision is REJECTED
+    assert analysis["decision"] == "REJECTED"
+    
+    # Verify summary mentions duplicate invoice
+    assert "duplicate" in analysis["summary"].lower()
+    assert "same amount" in analysis["summary"].lower() or "duplicate" in analysis["summary"].lower()
+    
+    # Verify conclusion explains duplicate risk and blocking
+    assert "duplicate" in analysis["conclusion"].lower()
+    assert "blocked" in analysis["conclusion"].lower() or "flagged" in analysis["conclusion"].lower()
+    assert "manual" in analysis["conclusion"].lower()
+    
+    # Verify details contain matching information
+    assert "$3,200.00" in analysis["details"]
+    assert "Vendor XYZ" in analysis["details"]
+    assert "2024-01-15" in analysis["details"]
+    assert "DUPLICATE CONFIRMED" in analysis["details"]

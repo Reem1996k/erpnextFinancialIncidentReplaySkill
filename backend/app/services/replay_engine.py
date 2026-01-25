@@ -35,6 +35,8 @@ class ReplayEngine:
         """
         if incident.incident_type == "Pricing_Issue":
             return ReplayEngine._analyze_pricing_issue(incident)
+        elif incident.incident_type == "Duplicate_Invoice":
+            return ReplayEngine._analyze_duplicate_invoice(incident)
         else:
             return ReplayEngine._analyze_generic(incident)
     
@@ -73,6 +75,47 @@ class ReplayEngine:
             f"Decision: {decision}. "
             f"The invoice amount is within acceptable variance threshold (20%). "
             f"Requires manual review for compliance."
+        )
+        
+        return {
+            "summary": summary,
+            "details": details,
+            "conclusion": conclusion,
+            "decision": decision
+        }
+    
+    @staticmethod
+    def _analyze_duplicate_invoice(incident: Incident) -> Dict[str, Any]:
+        """
+        Analyze a duplicate invoice incident.
+        
+        Args:
+            incident: The Incident object
+        
+        Returns:
+            Analysis dictionary
+        """
+        # Define duplicate invoice parameters
+        invoice_amount = 3200
+        vendor_name = "Vendor XYZ"
+        invoice_date = "2024-01-15"
+        
+        # Duplicate detected
+        decision = "REJECTED"
+        
+        summary = "Duplicate invoice detected - Same amount, vendor, and date"
+        details = (
+            f"Invoice Amount: ${invoice_amount:,.2f}\n"
+            f"Vendor: {vendor_name}\n"
+            f"Invoice Date: {invoice_date}\n"
+            f"Matching Fields: Amount, Vendor, Date\n"
+            f"Status: DUPLICATE CONFIRMED"
+        )
+        conclusion = (
+            f"Decision: {decision}. "
+            f"Invoice has been flagged as a duplicate based on matching "
+            f"amount, vendor, and date. This payment has been blocked to prevent "
+            f"duplicate payment. Manual verification required."
         )
         
         return {
