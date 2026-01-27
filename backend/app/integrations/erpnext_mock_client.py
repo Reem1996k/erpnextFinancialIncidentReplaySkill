@@ -1,49 +1,28 @@
 """
-Create a mock ERPNext client for integration testing.
+Mock ERPNext client implementation for testing and development.
 
-Requirements:
-- Create a class named ERPNextClient
-- This class simulates communication with ERPNext REST API
-- Do NOT perform real HTTP requests
-- Return hardcoded (mock) data
+This module provides a mock implementation of the BaseERPNextClient interface
+that simulates ERPNext API responses without making real HTTP requests.
+It returns hardcoded (mock) financial data for testing purposes.
 
-Methods to implement:
-
-1. get_invoice(invoice_id: str) -> dict
-   - Return a dictionary with:
-     - invoice_id
-     - total_amount
-     - currency
-     - status
-     - customer
-     - linked_sales_order
-
-2. get_sales_order(order_id: str) -> dict
-   - Return a dictionary with:
-     - order_id
-     - expected_amount
-     - currency
-     - status
-     - customer
-
-Additional notes:
-- Add clear docstrings explaining that this is a mock client
-- This client will be replaced later with a real ERPNext API integration
-- Keep the code simple and readable
+NOTE: This is a mock implementation. In production, this should be replaced with
+a real ERPNext API client that makes actual HTTP requests.
 """
 
 from typing import Dict, Any
+from .erpnext_client_base import BaseERPNextClient
 
 
-class ERPNextClient:
+class ERPNextMockClient(BaseERPNextClient):
     """
-    Mock ERPNext REST API client for integration testing.
+    Mock ERPNext client for testing and development.
     
-    This class simulates communication with ERPNext without making real HTTP requests.
-    It returns hardcoded (mock) data for testing and development purposes.
+    This class provides a mock implementation of the BaseERPNextClient interface.
+    It simulates communication with ERPNext without making real HTTP requests,
+    returning hardcoded (mock) data for testing and development purposes.
     
-    NOTE: This is a mock implementation. In production, this should be replaced with
-    a real ERPNext API client that makes actual HTTP requests.
+    This implementation is intended for use in test environments only.
+    In production, replace this with a real ERPNext API client.
     """
     
     def __init__(self):
@@ -52,21 +31,23 @@ class ERPNextClient:
     
     def get_invoice(self, invoice_id: str) -> Dict[str, Any]:
         """
-        Retrieve invoice data from ERPNext (mock).
+        Retrieve invoice data from ERPNext (mock implementation).
         
         Args:
-            invoice_id: The invoice ID to retrieve
+            invoice_id (str): The unique identifier of the invoice to retrieve.
         
         Returns:
-            Dictionary containing invoice details:
-            - invoice_id: str - The invoice identifier
-            - total_amount: float - Total invoice amount
-            - currency: str - Currency code (e.g., USD)
-            - status: str - Invoice status (Draft, Submitted, Paid, etc.)
-            - customer: str - Customer name
-            - linked_sales_order: str - Associated sales order ID
+            dict: A dictionary containing mock invoice details:
+                - invoice_id (str): The invoice identifier
+                - total_amount (float): Total invoice amount
+                - currency (str): Currency code (e.g., USD, EUR)
+                - status (str): Invoice status (Draft, Submitted, Paid, etc.)
+                - customer (str): Customer name
+                - linked_sales_order (str): Associated sales order ID or None
         
-        Note: This is a mock implementation that returns hardcoded data.
+        Note:
+            This is a mock implementation that returns hardcoded data.
+            For testing purposes only.
         """
         # Mock invoice data
         mock_invoices = {
@@ -108,20 +89,22 @@ class ERPNextClient:
     
     def get_sales_order(self, order_id: str) -> Dict[str, Any]:
         """
-        Retrieve sales order data from ERPNext (mock).
+        Retrieve sales order data from ERPNext (mock implementation).
         
         Args:
-            order_id: The sales order ID to retrieve
+            order_id (str): The unique identifier of the sales order to retrieve.
         
         Returns:
-            Dictionary containing sales order details:
-            - order_id: str - The order identifier
-            - expected_amount: float - Expected order amount
-            - currency: str - Currency code (e.g., USD)
-            - status: str - Order status (Draft, Submitted, Delivered, etc.)
-            - customer: str - Customer name
+            dict: A dictionary containing mock sales order details:
+                - order_id (str): The order identifier
+                - expected_amount (float): Expected order amount
+                - currency (str): Currency code (e.g., USD, EUR)
+                - status (str): Order status (Draft, Submitted, Delivered, etc.)
+                - customer (str): Customer name
         
-        Note: This is a mock implementation that returns hardcoded data.
+        Note:
+            This is a mock implementation that returns hardcoded data.
+            For testing purposes only.
         """
         # Mock sales order data
         mock_orders = {

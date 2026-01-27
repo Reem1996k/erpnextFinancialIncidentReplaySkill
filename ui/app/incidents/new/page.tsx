@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { IncidentCreate } from './types';
+import { IncidentCreate } from '@/app/types';
 
-export default function Home() {
+export default function CreateIncident() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

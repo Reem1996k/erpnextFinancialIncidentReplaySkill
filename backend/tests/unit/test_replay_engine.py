@@ -14,7 +14,7 @@ import pytest
 from unittest.mock import Mock
 from app.db.models import Incident
 from app.services.replay_engine import ReplayEngine
-from app.integrations.erpnext_client import ERPNextClient
+from backend.app.integrations.erpnext_mock_client import ERPNextClient
 
 
 class MockERPNextClient:
@@ -92,7 +92,7 @@ def test_replay_engine_pricing_issue_acceptable_variance():
         created_at=None
     )
     
-    replay_engine = ReplayEngine(mock_client)
+    replay_engine = ReplayEngine(MockERPNextClient())
     analysis = replay_engine.analyze_incident(incident)
     
     # Verify decision

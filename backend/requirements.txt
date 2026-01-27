@@ -6,5 +6,7 @@ pytest==8.3.4
 pytest-cov==5.0.0
 sqlalchemy
 jinja2
+requests
+python-dotenv
 
 

@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session
 from app.db.models import Incident
 from app.models.incident import IncidentCreate
 from app.services.replay_engine import ReplayEngine
-from app.integrations.erpnext_client import ERPNextClient
 from fastapi import HTTPException, status
 
 
@@ -67,6 +66,19 @@ def get_incident_by_id(incident_id: int, db: Session) -> Incident | None:
     return db.query(Incident).filter(Incident.id == incident_id).first()
 
 
+def get_all_incidents(db: Session) -> list[Incident]:
+    """
+    Get all incidents from the database.
+    
+    Args:
+        db: SQLAlchemy database session
+    
+    Returns:
+        List of all Incident objects
+    """
+    return db.query(Incident).all()
+
+
 def run_replay_for_incident(incident_id: int, db: Session) -> Incident | None:
     """
     Run replay analysis for an incident.
@@ -82,9 +94,8 @@ def run_replay_for_incident(incident_id: int, db: Session) -> Incident | None:
     if incident is None:
         return None
     
-    # Initialize ERPNext client and ReplayEngine
-    erpnext_client = ERPNextClient()
-    replay_engine = ReplayEngine(erpnext_client)
+    # Initialize ReplayEngine (it will handle ERP client selection via factory)
+    replay_engine = ReplayEngine()
     
     # Use ReplayEngine to analyze the incident
     analysis = replay_engine.analyze_incident(incident)

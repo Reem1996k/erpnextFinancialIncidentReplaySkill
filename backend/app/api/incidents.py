@@ -10,24 +10,15 @@ Requirements:
 
 """
 
-from fastapi import APIRouter, Depends, status, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.models.incident import IncidentCreate, IncidentResponse
-from app.controllers.incident_controller import create_incident, get_incident_by_id, run_replay_for_incident
+from app.controllers.incident_controller import create_incident, get_incident_by_id, run_replay_for_incident, get_all_incidents
 from app.db.database import SessionLocal
-import os
 
-# Set up templates
-templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
-templates = Jinja2Templates(directory=templates_dir)
 #before every route the is a /incidents prefix 
 #the tags is used for swagger documentation grouping
 router = APIRouter(prefix="/incidents", tags=["incidents"])
-
-# UI Router for HTML responses
-ui_router = APIRouter(prefix="/ui/incidents", tags=["ui"])
 
 
 def get_db():
@@ -56,6 +47,23 @@ async def create_new_incident(
     """
     db_incident = create_incident(incident, db)
     return db_incident
+
+
+@router.get("/", response_model=list[IncidentResponse])
+async def list_incidents(
+    db: Session = Depends(get_db)
+) -> list[IncidentResponse]:
+    """
+    Get all incidents.
+    
+    Args:
+        db: Database session (injected)
+    
+    Returns:
+        List of all incidents
+    """
+    incidents = get_all_incidents(db)
+    return incidents
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
@@ -104,33 +112,3 @@ async def replay_incident(
     if db_incident is None:
         raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
     return db_incident
-
-
-@ui_router.get("/{incident_id}", response_class=HTMLResponse)
-async def view_incident_replay(
-    incident_id: int,
-    request: Request,
-    db: Session = Depends(get_db)
-) -> str:
-    """
-    Display incident replay analysis in HTML format.
-    
-    Args:
-        incident_id: The ID of the incident to display
-        request: The HTTP request object
-        db: Database session (injected)
-    
-    Returns:
-        Rendered HTML template with incident details
-    
-    Raises:
-        HTTPException: 404 if incident not found
-    """
-    db_incident = get_incident_by_id(incident_id, db)
-    if db_incident is None:
-        raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
-    
-    return templates.TemplateResponse("incident_replay.html", {
-        "request": request,
-        "incident": db_incident
-    })
