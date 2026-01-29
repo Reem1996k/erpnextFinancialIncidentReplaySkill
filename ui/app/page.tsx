@@ -1,65 +1,254 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createIncident } from '@/lib/api';
+
+export default function CreateIncidentPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    erp_reference: '',
+    incident_type: 'invoice_discrepancy',
+    description: '',
+  });
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.erp_reference.trim()) {
+      setError('ERP Reference is required');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setError('Description is required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const incident = await createIncident(formData);
+      router.push(`/incidents/${incident.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create incident');
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="page-wrapper">
+      <div className="form-card">
+        {/* Title */}
+        <h1 className="page-title">
+          Create Financial Incident
+        </h1>
+
+        {/* Subtitle */}
+        <p className="page-subtitle">
+          Analyze invoice discrepancies with AI-powered insights
+        </p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="error-box">
+            <p className="error-text">{error}</p>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {/* ERP Reference */}
+          <div className="form-group">
+            <label className="form-label">ERP Reference</label>
+            <input
+              type="text"
+              id="erp_reference"
+              name="erp_reference"
+              value={formData.erp_reference}
+              onChange={handleInputChange}
+              placeholder="e.g., INV-2024-001234"
+              disabled={loading}
+              className="form-input"
+              required
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* Incident Type */}
+          <div className="form-group">
+            <label className="form-label">Incident Type</label>
+            <select
+              id="incident_type"
+              name="incident_type"
+              value={formData.incident_type}
+              onChange={handleInputChange}
+              disabled={loading}
+              className="form-input"
+            >
+              <option value="invoice_discrepancy">Invoice Discrepancy</option>
+              <option value="payment_mismatch">Payment Mismatch</option>
+              <option value="tax_calculation_error">Tax Calculation Error</option>
+              <option value="journal_entry_issue">Journal Entry Issue</option>
+            </select>
+          </div>
+
+          {/* Description */}
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Describe the issue in detail. Include amounts, dates, and any relevant transaction information..."
+              disabled={loading}
+              className="form-textarea"
+              required
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="form-button"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            {loading ? 'Analyzing...' : 'Create & Analyze'}
+          </button>
+        </form>
+      </div>
+
+      <style jsx>{`
+        .page-wrapper {
+          background-color: #f1f5f9;
+          min-height: 100vh;
+          padding: 40px 20px;
+        }
+
+        .form-card {
+          max-width: 900px;
+          margin: 40px auto;
+          padding: 32px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-title {
+          font-size: 32px;
+          font-weight: 700;
+          color: #111827;
+          text-align: center;
+          margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+          font-size: 14px;
+          color: #64748b;
+          text-align: center;
+          margin-top: 0;
+          margin-bottom: 32px;
+          font-weight: 400;
+        }
+
+        .error-box {
+          margin-bottom: 24px;
+          padding: 16px;
+          background-color: #fee2e2;
+          border: 1px solid #fca5a5;
+          border-radius: 8px;
+        }
+
+        .error-text {
+          font-size: 14px;
+          color: #991b1b;
+          margin: 0;
+        }
+
+        .form-group {
+          margin-bottom: 28px;
+        }
+
+        .form-label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #111827;
+          background: white;
+          transition: all 0.2s;
+          font-family: inherit;
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+          color: #9ca3af;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input:hover,
+        .form-textarea:hover {
+          border-color: #9ca3af;
+        }
+
+        .form-textarea {
+          min-height: 140px;
+          resize: vertical;
+        }
+
+        .form-button {
+          width: 100%;
+          padding: 12px 24px;
+          margin-top: 40px;
+          background-color: #2563eb;
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .form-button:hover:not(:disabled) {
+          background-color: #1d4ed8;
+        }
+
+        .form-button:disabled {
+          background-color: #9ca3af;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }

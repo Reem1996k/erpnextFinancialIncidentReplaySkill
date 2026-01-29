@@ -8,68 +8,62 @@ Requirements:
 - Ready for future routers
 - Clean, minimal, production-ready structure
 """
+import os
+import sys
+
+cwd = os.getcwd() + "/backend"
+if cwd not in sys.path:
+    sys.path.insert(0, cwd)
+# Initialize database on startup
+# Import Base and engine and create all tables
+
+from dotenv import load_dotenv #env loader
+from pathlib import Path
+
+# Load .env from backend directory
+backend_dir = Path(__file__).parent.parent
+env_path = backend_dir / ".env"
+load_dotenv(dotenv_path=env_path)
 from fastapi import FastAPI
-from app.models.health import HealthResponse
-from app.models.replay import ReplayResponse, ReplayScope, ReplaySummary, Finding, ControlGap, TimelineEvent
+from fastapi.middleware.cors import CORSMiddleware #give access to frontend apps
+from app.db.database import Base, engine
+# Import models to register them with SQLAlchemy
+from app.api.incidents import router as incidents_router
 
-app = FastAPI(title="ERPNext Financial Incident Replay Skill", version="0.1.0")
+# Try to import UI router, but don't fail if templates are missing
+from app.api.analysis import router as analysis_router
+
+#these metadata are used to generate swagger documentation
+app = FastAPI(
+    title="ERPNext Financial Incident Replay",
+    description="API for replaying financial incidents in ERPNext",
+    version="1.0.0"
+)
+
+# Add CORS middleware
+#connect frontend apps to this backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Create all database tables on startup
+Base.metadata.create_all(bind=engine)
+
+# Include routers
+#connect all the  endpoints to the main app
+app.include_router(incidents_router)
+app.include_router(analysis_router)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
-@app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok")
+if __name__ == "__main__":
+    import uvicorn
 
-
-@app.get("/replay/customer/{customer_id}", response_model=ReplayResponse)
-def replay_customer(customer_id: str) -> ReplayResponse:
-    # Dummy response for skeleton stage (no ERPNext integration yet)
-    scope = ReplayScope(
-        type="customer",
-        customer_id=customer_id,
-        invoice_id=None,
-        from_date="2026-01-01",
-        to_date="2026-01-22",
-    )
-
-    summary = ReplaySummary(
-        customer_name="Demo Customer",
-        currency="USD",
-        open_invoices_count=2,
-        total_outstanding=900.0,
-        incident_types=["PAYMENT_MISMATCH", "OVERDUE_RISK"],
-    )
-
-    timeline = [
-        TimelineEvent(
-            timestamp="2026-01-20T10:00:00Z",
-            event="INVOICE_SUBMITTED",
-            reference="INV-0003",
-            amount=900.0,
-        )
-    ]
-
-    findings = [
-        Finding(
-            code="PAYMENT_MISMATCH",
-            severity="CRITICAL",
-            message="Total paid amount does not match invoiced amount.",
-            evidence={"total_invoiced": 900.0, "total_paid": 1200.0},
-        )
-    ]
-
-    control_gaps = [
-        ControlGap(
-            gap="NO_PAYMENT_VALIDATION",
-            why_it_matters="Can cause disputes and financial losses.",
-            suggested_control="Block payments exceeding invoice total.",
-        )
-    ]
-
-    return ReplayResponse(
-        scope=scope,
-        summary=summary,
-        timeline=timeline,
-        findings=findings,
-        control_gaps=control_gaps,
-        conclusion="High financial risk detected due to payment inconsistencies.",
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
