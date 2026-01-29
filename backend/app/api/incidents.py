@@ -13,8 +13,9 @@ Requirements:
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.models.incident import IncidentCreate, IncidentResponse
-from app.controllers.incident_controller import create_incident, get_incident_by_id, run_replay_for_incident, get_all_incidents
+from app.controllers.incident_controller import create_incident, get_incident_by_id, run_replay_for_incident, get_all_incidents, resolve_incident
 from app.db.database import SessionLocal
+
 
 #before every route the is a /incidents prefix 
 #the tags is used for swagger documentation grouping
@@ -97,18 +98,9 @@ async def replay_incident(
 ) -> IncidentResponse:
     """
     Run replay analysis for an incident.
-    
-    Args:
-        incident_id: The ID of the incident to replay
-        db: Database session (injected)
-    
-    Returns:
-        Updated incident with replay analysis results
-    
-    Raises:
-        HTTPException: 404 if incident not found
+    Uses rule-based or AI analysis depending on configuration.
     """
-    db_incident = run_replay_for_incident(incident_id, db)
-    if db_incident is None:
+    incident = run_replay_for_incident(incident_id, db)
+    if incident is None:
         raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
-    return db_incident
+    return incident

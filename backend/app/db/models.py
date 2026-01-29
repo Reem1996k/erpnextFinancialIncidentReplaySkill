@@ -13,9 +13,12 @@ Add replay-related fields to the Incident model:
 - replay_details (string, nullable)
 - replay_conclusion (string, nullable)
 - replayed_at (datetime, nullable)
+- analysis_source (string, nullable) - "RULE" | "AI" | "FALLBACK"
+- confidence_score (float, nullable) - Analysis confidence 0.0-1.0
+- ai_analysis_json (string, nullable) - Raw AI response JSON
 """
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Float
 from app.db.database import Base
 
 
@@ -32,3 +35,6 @@ class Incident(Base):
     replay_conclusion = Column(String, nullable=True)
     replayed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    analysis_source = Column(String, nullable=True)  # RULE | AI | FALLBACK
+    confidence_score = Column(Float, nullable=True)  # 0.0 - 1.0
+    ai_analysis_json = Column(String, nullable=True)  # Raw AI response

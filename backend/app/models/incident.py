@@ -35,6 +35,8 @@ class IncidentResponse(BaseModel):
 - replay_details
 - replay_conclusion
 - replayed_at
+- analysis_source
+- confidence_score
 All fields should be optional.
 """
     """Schema for incident API response."""
@@ -48,6 +50,8 @@ All fields should be optional.
     replay_details: Optional[str] = None
     replay_conclusion: Optional[str] = None
     replayed_at: Optional[datetime] = None
+    analysis_source: Optional[str] = None
+    confidence_score: Optional[float] = None
     #config is a part of the pydantic this helps to convert the orm object to pydantic model (json serializable)
     class Config:
         from_attributes = True

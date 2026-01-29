@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Financial Incident Replay",
-  description: "ERPNext Financial Incident Replay System",
+  title: "Financial Incident Replay - Enterprise Platform",
+  description: "Financial discrepancy analysis platform",
 };
 
 export default function RootLayout({
@@ -15,23 +14,66 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <nav>
-          <h1 className="nav-title">
-            <svg className="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
-            </svg>
-            Financial Incident Replay
-          </h1>
-          <ul>
-            <li>
-              <Link href="/">Create Incident</Link>
-            </li>
-            <li>
-              <Link href="/incidents/list">View Incidents</Link>
-            </li>
-          </ul>
-        </nav>
-        <main>{children}</main>
+        <header className="app-header">
+          <div className="app-title">Financial Incident Replay</div>
+          <nav className="app-nav">
+            <a href="/">Create Incident</a>
+            <a href="/incidents">Incidents</a>
+          </nav>
+        </header>
+
+        <main className="main-content">
+          {children}
+        </main>
+
+        <style>{`
+          .app-header {
+            height: 64px;
+            background-color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+          }
+
+          .app-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+          }
+
+          .app-nav {
+            display: flex;
+            gap: 32px;
+          }
+
+          .app-nav a {
+            color: #e0e7ff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+          }
+
+          .app-nav a:hover {
+            color: white;
+            text-decoration: underline;
+          }
+
+          .main-content {
+            padding-top: 64px;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: #f1f7ff;
+          }
+        `}</style>
       </body>
     </html>
   );

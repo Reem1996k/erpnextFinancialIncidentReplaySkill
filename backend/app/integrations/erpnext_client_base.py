@@ -1,12 +1,12 @@
 """
-Abstract base class for ERPNext integration.
+Complete ERPNext Client Base Class
 
-This module defines the interface that all ERPNext client implementations
-must follow. Subclasses should provide concrete implementations for
-retrieving data from the ERP system.
+Abstract base class defining the interface for all ERPNext integrations.
+Implementations must provide methods for fetching financial data from ERP.
 """
 
 from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
 
 
 class BaseERPNextClient(ABC):
@@ -14,40 +14,61 @@ class BaseERPNextClient(ABC):
     Abstract base class for ERPNext client implementations.
     
     This class defines the contract for interacting with the ERPNext system.
-    Subclasses must implement all abstract methods to provide concrete
-    functionality for retrieving data from the ERP system.
+    All implementations must provide methods for fetching financial data.
     """
 
     @abstractmethod
-    def get_invoice(self, invoice_id: str) -> dict:
+    def get_invoice(self, invoice_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve invoice data from the ERPNext system.
         
         Args:
-            invoice_id (str): The unique identifier of the invoice to retrieve.
+            invoice_id: The unique identifier of the invoice
         
         Returns:
-            dict: A dictionary containing the invoice data from the ERP system.
-                 The structure and content depend on the ERPNext system's data model.
-        
-        Raises:
-            NotImplementedError: This method must be implemented by subclasses.
+            Dict with invoice data or None if not found.
+            Should include: name, customer, items, grand_total, posting_date, etc.
         """
         pass
 
     @abstractmethod
-    def get_sales_order(self, order_id: str) -> dict:
+    def get_sales_order(self, order_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve sales order data from the ERPNext system.
         
         Args:
-            order_id (str): The unique identifier of the sales order to retrieve.
+            order_id: The unique identifier of the sales order
         
         Returns:
-            dict: A dictionary containing the sales order data from the ERP system.
-                 The structure and content depend on the ERPNext system's data model.
+            Dict with sales order data or None if not found.
+            Should include: name, customer, items, total_amount, creation, etc.
+        """
+        pass
+
+    @abstractmethod
+    def get_customer(self, customer_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve customer data from the ERPNext system.
         
-        Raises:
-            NotImplementedError: This method must be implemented by subclasses.
+        Args:
+            customer_id: The unique identifier of the customer
+        
+        Returns:
+            Dict with customer data or None if not found.
+            Should include: name, email, credit_limit, country, etc.
+        """
+        pass
+
+    @abstractmethod
+    def get_item(self, item_code: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve item data from the ERPNext system.
+        
+        Args:
+            item_code: The unique code of the item
+        
+        Returns:
+            Dict with item data or None if not found.
+            Should include: name, item_code, item_group, standard_rate, etc.
         """
         pass

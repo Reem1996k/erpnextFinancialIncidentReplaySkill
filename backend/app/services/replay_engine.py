@@ -1,193 +1,145 @@
 """
-Replay Engine service for analyzing financial incidents.
+Replay Engine service for analyzing financial incidents (RULE-BASED ONLY).
 
-This module provides the ReplayEngine class which analyzes financial incidents
-using dependency injection to work with any BaseERPNextClient implementation.
-The ERP client can be explicitly provided for testing or automatically selected
-based on the ERP_CLIENT_MODE environment variable.
+ARCHITECTURE RULE: ReplayEngine ONLY does rule-based analysis.
+- No AI fallback (AI is handled separately via AIResolver)
+- Pure deterministic analysis
+- Returns AnalysisResult with decision, confidence, and reasoning
+
+This keeps rule engine independent from AI.
 """
 
 from typing import Dict, Any, Optional
+import logging
 from app.db.models import Incident
 from app.integrations.erpnext_client_base import BaseERPNextClient
 from app.integrations.client_factory import get_erp_client
+from app.services.incident_analyzers import IncidentAnalyzerFactory, AnalysisResult
+
+logger = logging.getLogger(__name__)
 
 
 class ReplayEngine:
     """
-    Service for analyzing financial incidents with ERPNext integration.
+    Rule-based incident analyzer (NO AI).
     
-    This class uses dependency injection to accept any implementation of
-    BaseERPNextClient, allowing for flexible testing with mock clients
-    and production use with real API clients.
+    This class orchestrates ONLY rule-based incident analysis:
+    1. Fetch ERP data
+    2. Select analyzer for incident type
+    3. Run deterministic rules
+    4. Return result (even if UNDETERMINED - no fallback)
+    
+    For AI analysis, use AIResolver separately in controller.
     """
     
-    def __init__(self, erp_client: Optional[BaseERPNextClient] = None):
+    def __init__(
+        self, 
+        erp_client: Optional[BaseERPNextClient] = None
+    ):
         """
-        Initialize the ReplayEngine with an ERPNext client.
+        Initialize ReplayEngine with ERP client.
         
         Args:
-            erp_client (Optional[BaseERPNextClient]): An implementation of the ERPNext
-                client interface. If not provided (None), the client will be automatically
-                selected based on the ERP_CLIENT_MODE environment variable via the factory:
-                - "real": Creates an ERPNextRealClient for production use
-                - "mock" (default): Creates an ERPNextMockClient for testing
-                
-                This can be explicitly provided for unit testing to inject a mock or test
-                double, which will bypass the factory and environment variable check.
-        
-        Note:
-            This uses dependency injection to allow flexibility in choosing which
-            ERPNext client implementation to use. When erp_client is None, the factory
-            function respects the ERP_CLIENT_MODE environment variable for automatic
-            client selection. This allows tests to pass in mock clients while production
-            code uses environment-driven configuration.
+            erp_client: ERP client implementation.
+                If None, automatically selected based on ERP_CLIENT_MODE env var.
         """
         self.erp_client = erp_client if erp_client is not None else get_erp_client()
-
     
     def analyze_incident(self, incident: Incident) -> Dict[str, Any]:
         """
-        Analyze an incident based on its type.
+        Analyze incident using RULE-BASED ANALYSIS ONLY.
+        
+        No AI, no fallback. Pure deterministic rules.
         
         Args:
             incident: The Incident object to analyze
         
         Returns:
-            Dictionary containing summary, details, conclusion, and decision
+            Dictionary containing analysis results:
+            {
+                "summary": str,
+                "details": str,
+                "conclusion": str,
+                "confidence": float,
+                "analysis_source": "RULE"
+            }
         """
-        if incident.incident_type == "Pricing_Issue":
-            return self._analyze_pricing_issue(incident)
-        elif incident.incident_type == "Duplicate_Invoice":
-            return self._analyze_duplicate_invoice(incident)
-        else:
-            return self._analyze_generic(incident)
-    
-    def _analyze_pricing_issue(self, incident: Incident) -> Dict[str, Any]:
-        """
-        Analyze a pricing issue incident using ERPNext data.
+        try:
+            logger.info(f"ReplayEngine: Analyzing incident {incident.id} (RULE-BASED ONLY)")
+            
+            # Run rule-based analysis
+            rule_result = self._run_rule_based_analysis(incident)
+            
+            logger.info(
+                f"ReplayEngine: Analysis complete - "
+                f"decision={rule_result.decision}, confidence={rule_result.confidence}"
+            )
+            
+            return rule_result.to_dict()
         
-        Retrieves invoice and sales order data from ERPNext client,
-        compares amounts, and determines if the variance is acceptable.
+        except Exception as e:
+            logger.error(f"ReplayEngine: Error analyzing incident {incident.id}: {e}")
+            # Return error result (not undetermined, explicit error)
+            from app.services.incident_analyzers import AnalysisResult
+            return AnalysisResult(
+                decision="UNDETERMINED",
+                summary="Rule analysis error",
+                details=f"Error: {str(e)}",
+                conclusion="Manual review required",
+                confidence=0.0,
+                analysis_source="RULE"
+            ).to_dict()
+    
+    def _run_rule_based_analysis(self, incident: Incident) -> AnalysisResult:
+        """
+        Run rule-based analyzer for incident type.
         
         Args:
-            incident: The Incident object
+            incident: Incident to analyze
         
         Returns:
-            Analysis dictionary with summary, details, conclusion, and decision
+            AnalysisResult (may be UNDETERMINED if rules don't apply)
         """
-        # Extract invoice and order IDs from description or use defaults
-        # For demo purposes, we'll use mock IDs that the mock client recognizes
-        invoice_id = incident.erp_reference  # ✅ החשבונית האמיתית מ-ERPNext
-
-        invoice_data = self.erp_client.get_invoice(invoice_id)
-
-        sales_order_id = invoice_data.get("linked_sales_order")
-        if not sales_order_id:
-            raise RuntimeError(
-        f"No linked Sales Order found for invoice {invoice_id}"
-    )
-        sales_order_data = self.erp_client.get_sales_order(sales_order_id)
+        try:
+            logger.info(
+                f"ReplayEngine._run_rule_based_analysis: "
+                f"Incident {incident.id}, type={incident.incident_type}"
+            )
+            
+            # Get analyzer for incident type
+            analyzer = IncidentAnalyzerFactory.get_analyzer(
+                incident.incident_type,
+                self.erp_client
+            )
+            
+            if analyzer is None:
+                logger.warning(
+                    f"ReplayEngine: No analyzer for type '{incident.incident_type}'"
+                )
+                return AnalysisResult(
+                    decision="UNDETERMINED",
+                    summary=f"Unknown incident type: {incident.incident_type}",
+                    details=f"No rule-based analyzer for type '{incident.incident_type}'",
+                    conclusion="Manual review required",
+                    confidence=0.0,
+                    analysis_source="RULE"
+                )
+            
+            # Run analyzer
+            logger.info(f"ReplayEngine: Running analyzer for incident {incident.id}")
+            result = analyzer.analyze(incident)
+            return result
         
-        # Extract amounts
-        invoice_amount = invoice_data.get("total_amount", 0)
-        expected_amount = sales_order_data.get("expected_amount", 0)
-        currency = invoice_data.get("currency", "USD")
-        
-        # Calculate difference
-        difference = invoice_amount - expected_amount
-        
-        # Calculate percentage difference
-        if expected_amount > 0:
-            percentage_difference = (difference / expected_amount) * 100
-        else:
-            percentage_difference = 0
-        
-        # Determine decision based on percentage
-        if abs(percentage_difference) <= 20:
-            decision = "APPROVED_WITH_RISK"
-        else:
-            decision = "REJECTED"
-        
-        # Build response
-        summary = f"Invoice exceeds expected amount by {percentage_difference:.1f}%"
-        details = (
-            f"Invoice ID: {invoice_id}\n"
-            f"Sales Order ID: {sales_order_id}\n"
-            f"Expected amount: {currency} {expected_amount:,.2f}\n"
-            f"Invoice amount: {currency} {invoice_amount:,.2f}\n"
-            f"Difference: {currency} {difference:,.2f} ({percentage_difference:.1f}%)\n"
-            f"Invoice Status: {invoice_data.get('status', 'Unknown')}\n"
-            f"Order Status: {sales_order_data.get('status', 'Unknown')}"
-        )
-        conclusion = (
-            f"Decision: {decision}. "
-            f"The invoice amount is {abs(percentage_difference):.1f}% "
-            f"{'above' if difference > 0 else 'below'} the expected amount. "
-            f"Variance is {'within' if abs(percentage_difference) <= 20 else 'outside'} "
-            f"acceptable threshold (20%). Requires manual review for compliance."
-        )
-        
-        return {
-            "summary": summary,
-            "details": details,
-            "conclusion": conclusion,
-            "decision": decision
-        }
-    
-    def _analyze_duplicate_invoice(self, incident: Incident) -> Dict[str, Any]:
-        """
-        Analyze a duplicate invoice incident.
-        
-        Args:
-            incident: The Incident object
-        
-        Returns:
-            Analysis dictionary
-        """
-        # Define duplicate invoice parameters
-        invoice_amount = 3200
-        vendor_name = "Vendor XYZ"
-        invoice_date = "2024-01-15"
-        
-        # Duplicate detected
-        decision = "REJECTED"
-        
-        summary = "Duplicate invoice detected - Same amount, vendor, and date"
-        details = (
-            f"Invoice Amount: ${invoice_amount:,.2f}\n"
-            f"Vendor: {vendor_name}\n"
-            f"Invoice Date: {invoice_date}\n"
-            f"Matching Fields: Amount, Vendor, Date\n"
-            f"Status: DUPLICATE CONFIRMED"
-        )
-        conclusion = (
-            f"Decision: {decision}. "
-            f"Invoice has been flagged as a duplicate based on matching "
-            f"amount, vendor, and date. This payment has been blocked to prevent "
-            f"duplicate payment. Manual verification required."
-        )
-        
-        return {
-            "summary": summary,
-            "details": details,
-            "conclusion": conclusion,
-            "decision": decision
-        }
-    
-    def _analyze_generic(self, incident: Incident) -> Dict[str, Any]:
-        """
-        Analyze a generic incident.
-        
-        Args:
-            incident: The Incident object
-        
-        Returns:
-            Analysis dictionary
-        """
-        return {
-            "summary": f"Analysis for {incident.incident_type}",
-            "details": incident.description,
-            "conclusion": "Generic analysis completed. Manual review recommended.",
-            "decision": "PENDING_REVIEW"
-        }
+        except Exception as e:
+            logger.error(
+                f"ReplayEngine: Error in _run_rule_based_analysis: {e}", 
+                exc_info=True
+            )
+            return AnalysisResult(
+                decision="UNDETERMINED",
+                summary="Rule-based analysis error",
+                details=f"Error during rule analysis: {str(e)}",
+                conclusion="Manual review required",
+                confidence=0.0,
+                analysis_source="RULE"
+            )
