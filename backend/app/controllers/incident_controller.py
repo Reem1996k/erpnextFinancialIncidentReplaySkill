@@ -1,15 +1,3 @@
-"""
-Create a controller function to create a new Incident.
-
-Requirements:
-- Accept IncidentCreate schema
-- Create Incident SQLAlchemy object
-- Set status to "OPEN"
-- Save to database using SQLAlchemy session
-- Return the created Incident
-
-"""
-
 from datetime import datetime
 import os
 import json
@@ -17,25 +5,23 @@ import logging
 from sqlalchemy.orm import Session
 from app.db.models import Incident
 from app.models.incident import IncidentCreate
-from app.services.replay_engine import ReplayEngine
 from app.ai.ai_resolver import AIResolver
 from app.ai.ai_factory import get_ai_client
 from app.integrations.client_factory import get_erp_client
 from fastapi import HTTPException, status
 import json
 
-
-def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
-    """
+"""
     Create a new incident in the database.
     
     Args:
         incident_data: IncidentCreate schema with incident details
         db: SQLAlchemy database session
     
-    Returns:
-        Created Incident object
-    """
+    Returns:Created Incident object
+"""
+def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
+
     existing = (
         db.query(Incident)
         .filter(Incident.erp_reference == incident_data.erp_reference)
@@ -59,8 +45,7 @@ def create_incident(incident_data: IncidentCreate, db: Session) -> Incident:
     return db_incident
 
 
-def get_incident_by_id(incident_id: int, db: Session) -> Incident | None:
-    """
+"""
     Get an incident by ID from the database.
     
     Args:
@@ -69,12 +54,13 @@ def get_incident_by_id(incident_id: int, db: Session) -> Incident | None:
     
     Returns:
         Incident object if found, None otherwise
-    """
+"""
+def get_incident_by_id(incident_id: int, db: Session) -> Incident | None:
+
     return db.query(Incident).filter(Incident.id == incident_id).first()
 
 
-def get_all_incidents(db: Session) -> list[Incident]:
-    """
+"""
     Get all incidents from the database.
     
     Args:
@@ -82,47 +68,12 @@ def get_all_incidents(db: Session) -> list[Incident]:
     
     Returns:
         List of all Incident objects
-    """
+"""
+def get_all_incidents(db: Session) -> list[Incident]:
+   
     return db.query(Incident).all()
 
-
-def run_replay_for_incident(incident_id: int, db: Session) -> Incident | None:
-    """
-    Run replay analysis for an incident.
-    
-    Args:
-        incident_id: The ID of the incident to replay
-        db: SQLAlchemy database session
-    
-    Returns:
-        Updated Incident object if found, None otherwise
-    """
-    incident = get_incident_by_id(incident_id, db)
-    if incident is None:
-        return None
-    
-    # Initialize ReplayEngine (it will handle ERP client selection via factory)
-    replay_engine = ReplayEngine()
-    
-    # Use ReplayEngine to analyze the incident
-    analysis = replay_engine.analyze_incident(incident)
-    
-    # Populate replay fields from analysis
-    incident.replay_summary = analysis["summary"]
-    incident.replay_details = analysis["details"]
-    incident.replay_conclusion = analysis["conclusion"]
-    incident.analysis_source = analysis.get("analysis_source", "RULE")
-    incident.confidence_score = analysis.get("confidence", 0.0)
-    incident.status = "ANALYZED"
-    incident.replayed_at = datetime.utcnow()
-    
-    db.commit()
-    db.refresh(incident)
-    return incident
-
-
-def resolve_incident(incident_id: int, db: Session) -> Incident | None:
-    """
+"""
     Resolve an incident using STRICT AI-ONLY or RULE-ONLY path.
     
     CRITICAL GUARANTEES:
@@ -140,7 +91,9 @@ def resolve_incident(incident_id: int, db: Session) -> Incident | None:
     
     Returns:
         Updated Incident object if found, None otherwise
-    """
+"""
+def resolve_incident(incident_id: int, db: Session) -> Incident | None:
+
     logger = logging.getLogger(__name__)
     
     incident = get_incident_by_id(incident_id, db)
@@ -154,21 +107,18 @@ def resolve_incident(incident_id: int, db: Session) -> Incident | None:
         # === PATH 1: AI ANALYSIS ONLY ===
         logger.info(f"resolve_incident: AI path for incident {incident_id}")
         return _resolve_with_ai(incident, incident_id, db)
-    else:
-        # === PATH 2: RULE-BASED ANALYSIS ONLY ===
-        logger.info(f"resolve_incident: RULE path for incident {incident_id}")
-        return _resolve_with_rules(incident, incident_id, db)
 
 
-def _resolve_with_ai(incident: Incident, incident_id: int, db: Session) -> Incident:
-    """
+"""
     Resolve using AI analysis only.
     
     If AI fails → status = UNDER_REVIEW, analysis_source = AI_FAILED
     If AI succeeds → status = RESOLVED, analysis_source = AI
     
     NEVER marks RESOLVED on AI failure.
-    """
+"""
+def _resolve_with_ai(incident: Incident, incident_id: int, db: Session) -> Incident:
+    
     logger = logging.getLogger(__name__)
     
     try:
@@ -213,54 +163,7 @@ def _resolve_with_ai(incident: Incident, incident_id: int, db: Session) -> Incid
         db.refresh(incident)
         return incident
 
-
-def _resolve_with_rules(incident: Incident, incident_id: int, db: Session) -> Incident:
-    """
-    Resolve using rule-based analysis only.
-    
-    No AI involved. Pure rule-based.
-    """
-    logger = logging.getLogger(__name__)
-    
-    try:
-        logger.info(f"_resolve_with_rules: Running rule-based analysis for incident {incident_id}")
-        
-        replay_engine = ReplayEngine()
-        rule_analysis = replay_engine.analyze_incident(incident)
-        
-        # Persist rule result
-        incident.replay_summary = rule_analysis.get("summary", "")
-        incident.replay_details = rule_analysis.get("details", "")
-        incident.replay_conclusion = rule_analysis.get("conclusion", "")
-        incident.confidence_score = rule_analysis.get("confidence", 0.0)
-        incident.analysis_source = "RULE"
-        incident.status = "RESOLVED"
-        incident.replayed_at = datetime.utcnow()
-        
-        logger.info(f"_resolve_with_rules: Rule analysis succeeded for incident {incident_id}")
-        
-        db.commit()
-        db.refresh(incident)
-        return incident
-    
-    except Exception as e:
-        # Rule analysis failed - still mark as error (not AI_FAILED)
-        logger.error(f"_resolve_with_rules: Rule analysis FAILED for incident {incident_id}: {str(e)}")
-        incident.status = "UNDER_REVIEW"
-        incident.replay_summary = "Rule analysis error"
-        incident.replay_details = f"Error: {str(e)}"
-        incident.replay_conclusion = "Manual review required"
-        incident.confidence_score = 0.0
-        incident.analysis_source = "RULE_FAILED"
-        incident.replayed_at = datetime.utcnow()
-        
-        db.commit()
-        db.refresh(incident)
-        return incident
-
-
-def _run_ai_analysis_for_incident(incident: Incident, ai_client) -> dict:
-    """
+"""
     Run AI analysis with STRICT validation.
 
     Calls AIResolver which:
@@ -277,7 +180,9 @@ def _run_ai_analysis_for_incident(incident: Incident, ai_client) -> dict:
 
     Raises:
         RuntimeError: On ANY failure (API error, validation error, etc.)
-    """
+"""
+def _run_ai_analysis_for_incident(incident: Incident, ai_client) -> dict:
+   
     logger = logging.getLogger(__name__)
 
     try:
@@ -309,8 +214,7 @@ def _run_ai_analysis_for_incident(incident: Incident, ai_client) -> dict:
         raise RuntimeError(f"AI analysis failed: {str(e)}") from e
 
 
-def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
-    """
+"""
     Gather ERP data for AI analysis context.
     
     Args:
@@ -319,7 +223,9 @@ def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
     
     Returns:
         Dictionary with invoice, sales_order, and customer data
-    """
+"""
+def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
+
     logger = logging.getLogger(__name__)
     
     try:
@@ -329,20 +235,12 @@ def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
         invoice_data = erp_client.get_invoice(invoice_id) or {}
         logger.debug(f"Invoice {invoice_id} fetched: {list(invoice_data.keys())}")
         
-        # Fetch linked sales order from invoice header
+        # Initialize variables
+        sales_order_id = None
         sales_order_data = {}
         
-        # Try multiple field names (ERPNext API uses different field names)
-        sales_order_id = (
-            invoice_data.get("sales_order") or
-            invoice_data.get("so_no") or
-            invoice_data.get("linked_sales_order")
-        )
-        
-        logger.debug(f"Invoice {invoice_id} SO ID attempt: {sales_order_id}")
-        
-        # If not found at header level, try from first item (fallback)
-        if not sales_order_id:
+        # Try to find sales order ID from invoice items
+        if invoice_data:
             items = invoice_data.get("items", [])
             if items and isinstance(items, list) and len(items) > 0:
                 first_item = items[0]
@@ -361,11 +259,11 @@ def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
         else:
             logger.warning(f"No sales order linked to invoice {invoice_id}")
         
-        # Fetch customer data
+        # Fetch customer data (use "customer" field, not "customer_name")
         customer_data = {}
-        customer_name = invoice_data.get("customer_name")
-        if customer_name:
-            customer_data = erp_client.get_customer(customer_name) or {}
+        customer_id = invoice_data.get("customer")  # Fixed: use customer ID
+        if customer_id:
+            customer_data = erp_client.get_customer(customer_id) or {}
         
         return {
             "invoice": invoice_data,

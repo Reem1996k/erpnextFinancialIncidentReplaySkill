@@ -7,7 +7,6 @@ Provides endpoint to trigger incident analysis with ERP data extraction.
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 import logging
-
 from app.db.database import SessionLocal
 from app.db.models import Incident
 from app.controllers.incident_controller import resolve_incident

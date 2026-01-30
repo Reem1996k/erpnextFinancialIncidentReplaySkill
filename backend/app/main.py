@@ -10,12 +10,13 @@ Requirements:
 """
 import os
 import sys
-
+"""
+    Here I make sure the backend is part of the
+    Python path to avoid import problems in different environments.
+”"""
 cwd = os.getcwd() + "/backend"
 if cwd not in sys.path:
     sys.path.insert(0, cwd)
-# Initialize database on startup
-# Import Base and engine and create all tables
 
 from dotenv import load_dotenv #env loader
 from pathlib import Path
