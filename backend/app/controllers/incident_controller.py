@@ -9,7 +9,7 @@ from app.ai.ai_resolver import AIResolver
 from app.ai.ai_factory import get_ai_client
 from app.integrations.client_factory import get_erp_client
 from fastapi import HTTPException, status
-import json
+
 
 """
     Create a new incident in the database.
@@ -74,40 +74,49 @@ def get_all_incidents(db: Session) -> list[Incident]:
     return db.query(Incident).all()
 
 """
-    Resolve an incident using STRICT AI-ONLY or RULE-ONLY path.
-    
-    CRITICAL GUARANTEES:
-    1. If AI_ENABLED=true → AI ONLY (no rule execution)
-    2. If AI_ENABLED=false → RULE ONLY (no AI execution)
-    3. If AI fails → status = UNDER_REVIEW, analysis_source = AI_FAILED
-    4. NEVER mark RESOLVED if AI failed
-    5. analysis_source = "AI" only when AI succeeds
-    6. analysis_source = "RULE" only when rule path taken
-    7. NO fallback between paths. NO merging of results.
-    
+    Resolve an incident using AI analysis.
+
+    Requirements:
+    - AI_ENABLED must be set to 'true'
+    - ANTHROPIC_API_KEY must be configured
+
+    Behavior:
+    - If AI_ENABLED=false → Returns HTTP 503 error
+    - If AI succeeds → status = RESOLVED, analysis_source = AI
+    - If AI fails → status = UNDER_REVIEW, analysis_source = AI_FAILED
+
     Args:
         incident_id: The ID of the incident to resolve
         db: SQLAlchemy database session
-    
+
     Returns:
         Updated Incident object if found, None otherwise
+
+    Raises:
+        HTTPException: 503 if AI_ENABLED is false
+        HTTPException: 404 if incident not found
 """
 def resolve_incident(incident_id: int, db: Session) -> Incident | None:
-
     logger = logging.getLogger(__name__)
     
     incident = get_incident_by_id(incident_id, db)
     if incident is None:
         return None
     
-    # Parse AI_ENABLED as boolean (strict: "true"/"1"/"yes"/"on" → True)
+    # Parse AI_ENABLED as boolean
     ai_enabled = os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
     
-    if ai_enabled:
-        # === PATH 1: AI ANALYSIS ONLY ===
-        logger.info(f"resolve_incident: AI path for incident {incident_id}")
-        return _resolve_with_ai(incident, incident_id, db)
-
+    if not ai_enabled:
+        logger.error(f"AI_ENABLED is false - cannot resolve incident {incident_id}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI analysis is disabled. Set AI_ENABLED=true to use this feature."
+        )
+    
+    # AI path
+    logger.info(f"resolve_incident: AI path for incident {incident_id}")
+    return _resolve_with_ai(incident, incident_id, db)
+    
 
 """
     Resolve using AI analysis only.

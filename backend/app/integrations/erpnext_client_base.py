@@ -58,17 +58,3 @@ class BaseERPNextClient(ABC):
             Should include: name, email, credit_limit, country, etc.
         """
         pass
-
-    @abstractmethod
-    def get_item(self, item_code: str) -> Optional[Dict[str, Any]]:
-        """
-        Retrieve item data from the ERPNext system.
-        
-        Args:
-            item_code: The unique code of the item
-        
-        Returns:
-            Dict with item data or None if not found.
-            Should include: name, item_code, item_group, standard_rate, etc.
-        """
-        pass
