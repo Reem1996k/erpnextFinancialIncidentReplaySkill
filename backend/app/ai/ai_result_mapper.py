@@ -80,11 +80,3 @@ class AIResultMapper:
             "confidence_score": conf_float
         }
     
-    @staticmethod
-    def map_ai_result(ai_result: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Alias for map_ai_response for backward compatibility.
-        Same behavior: NO defaults, raises on invalid.
-        """
-        return AIResultMapper.map_ai_response(ai_result)
-
