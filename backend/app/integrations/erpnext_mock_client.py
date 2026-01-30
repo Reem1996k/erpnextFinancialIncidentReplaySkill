@@ -235,30 +235,5 @@ class ERPNextMockClient(BaseERPNextClient):
         }
         return customers.get(customer_id)
 
-    def get_item(self, item_code: str) -> Optional[Dict[str, Any]]:
-        """Return mock item data."""
-        items = {
-            "ITEM-A": {
-                "name": "ITEM-A",
-                "doctype": "Item",
-                "item_code": "ITEM-A",
-                "item_name": "Widget A",
-                "item_group": "Products",
-                "standard_rate": 500.00,
-                "uom": "Unit",
-                "stock_qty": 100
-            },
-            "ITEM-B": {
-                "name": "ITEM-B",
-                "doctype": "Item",
-                "item_code": "ITEM-B",
-                "item_name": "Widget B",
-                "item_group": "Products",
-                "standard_rate": 1000.00,
-                "uom": "Unit",
-                "stock_qty": 50
-            }
-        }
-        return items.get(item_code)
 
 

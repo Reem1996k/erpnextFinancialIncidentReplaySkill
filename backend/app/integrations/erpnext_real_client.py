@@ -208,27 +208,3 @@ class ERPNextRealClient(BaseERPNextClient):
         
         return data
 
-    def get_item(self, item_code: str) -> Dict[str, Any]:
-        """
-        Retrieve item data from the ERPNext system.
-        
-        Args:
-            item_code (str): The unique code of the item to retrieve.
-        
-        Returns:
-            dict: Raw item data from ERPNext API.
-        
-        Raises:
-            RuntimeError: If the API request fails.
-        """
-        endpoint = f"/api/resource/Item/{item_code}"
-        response = self._make_request(endpoint)
-        data = response.get("data", {})
-        
-        # Return raw data
-        if isinstance(data, list):
-            if not data:
-                return {}
-            return data[0]
-        
-        return data
