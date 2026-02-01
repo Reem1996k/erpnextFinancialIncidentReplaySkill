@@ -28,7 +28,7 @@ class AIClientAnthropic(AIClientBase):
     Makes direct HTTPS calls to Anthropic API endpoint.
     Returns structured incident analysis responses.
     """
-    
+    #This is the URL to which your code sends an HTTP request to “talk” to Claude.
     API_ENDPOINT = "https://api.anthropic.com/v1/messages"
     API_VERSION = "2023-06-01"
     DEFAULT_MODEL = "claude-sonnet-4-20250514"
