@@ -268,7 +268,7 @@ def _gather_erp_data_for_incident(incident: Incident, erp_client) -> dict:
         else:
             logger.warning(f"No sales order linked to invoice {invoice_id}")
         
-        # Fetch customer data (use "customer" field, not "customer_name")
+        # Fetch customer data if customer ID available
         customer_data = {}
         customer_id = invoice_data.get("customer")  # Fixed: use customer ID
         if customer_id:

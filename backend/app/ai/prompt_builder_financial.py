@@ -5,8 +5,7 @@ Generates prompts for Claude to analyze ANY Sales Invoice vs Sales Order discrep
 Works for all currencies, tax schemes, charges, and pricing scenarios.
 """
 
-import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 def build_financial_analysis_prompt(
