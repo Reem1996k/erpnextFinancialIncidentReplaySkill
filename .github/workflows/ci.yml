@@ -11,20 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Install dependencies
+      - name: Start ERPNext stack
         run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          docker compose -f backend/docker-compose.ci.yml up -d
+          sleep 60  # ERPNext boot time
 
-      - name: Run tests
-        working-directory: backend
+      - name: Run API tests
         run: |
-          pytest --cov=app --cov-report=term-missing
+          docker compose -f backend/docker-compose.ci.yml exec backend \
+          pytest tests/api
+
+      - name: Run Integration tests
+        run: |
+          docker compose -f backend/docker-compose.ci.yml exec backend \
+          pytest tests/integration

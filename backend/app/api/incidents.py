@@ -14,22 +14,13 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.models.incident import IncidentCreate, IncidentResponse
 from app.controllers.incident_controller import create_incident, get_incident_by_id, get_all_incidents
-from app.db.database import SessionLocal
+from app.db.dependencies import get_db
+
 
 
 #before every route the is a /incidents prefix 
 #the tags is used for swagger documentation grouping
 router = APIRouter(prefix="/incidents", tags=["incidents"])
-
-
-def get_db():
-    """Dependency to get database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 #response_model is a decorator parameter that helps to convert the orm object to pydantic model (json serializable)
 @router.post("/", response_model=IncidentResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_incident(
