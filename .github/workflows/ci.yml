@@ -7,8 +7,43 @@ on:
     branches: [ main, dev ]
 
 jobs:
-  backend-tests:
+  # =========================
+  # API / UNIT TESTS (NO DOCKER)
+  # =========================
+  api-tests:
+    name: API Tests (Fast, No Docker)
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run API tests
+        working-directory: backend
+        env:
+          AI_ENABLED: "true"   # קריטי בשביל ה-mocks
+        run: |
+          pytest tests/api
+
+
+  # =========================
+  # INTEGRATION TESTS (DOCKER + ERPNEXT)
+  # =========================
+  integration-tests:
+    name: Integration Tests (Docker + ERPNext)
+    runs-on: ubuntu-latest
+    needs: api-tests   # רץ רק אם API tests עברו
 
     steps:
       - name: Checkout code
@@ -17,21 +52,16 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      # -------------------------
-      # API TESTS (NO ERP, NO AI)
-      # -------------------------
-      - name: Run API tests
+      - name: Start ERPNext stack
         run: |
-          docker compose -f backend/docker-compose.ci.yml up \
-            --abort-on-container-exit \
-            --exit-code-from backend-api-tests
+          docker compose -f backend/docker-compose.ci.yml up -d mariadb erpnext
+          sleep 90  # ERPNext עולה לאט, זה חובה
 
-      # -------------------------
-      # INTEGRATION TESTS
-      # ERPNext + Real AI
-      # -------------------------
       - name: Run Integration tests
         run: |
-          docker compose -f backend/docker-compose.ci.yml up \
-            --abort-on-container-exit \
-            --exit-code-from backend-integration-tests
+          docker compose -f backend/docker-compose.ci.yml run --rm backend-integration-tests
+
+      - name: Shutdown stack
+        if: always()
+        run: |
+          docker compose -f backend/docker-compose.ci.yml down -v
