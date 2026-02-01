@@ -7,26 +7,31 @@ on:
     branches: [ main, dev ]
 
 jobs:
-  test:
+  backend-tests:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Start ERPNext stack
-        run: |
-          docker compose -f backend/docker-compose.ci.yml up -d
-          sleep 60  # ERPNext boot time
-
+      # -------------------------
+      # API TESTS (NO ERP, NO AI)
+      # -------------------------
       - name: Run API tests
         run: |
-          docker compose -f backend/docker-compose.ci.yml exec backend \
-          pytest tests/api
+          docker compose -f backend/docker-compose.ci.yml up \
+            --abort-on-container-exit \
+            --exit-code-from backend-api-tests
 
+      # -------------------------
+      # INTEGRATION TESTS
+      # ERPNext + Real AI
+      # -------------------------
       - name: Run Integration tests
         run: |
-          docker compose -f backend/docker-compose.ci.yml exec backend \
-          pytest tests/integration
+          docker compose -f backend/docker-compose.ci.yml up \
+            --abort-on-container-exit \
+            --exit-code-from backend-integration-tests
