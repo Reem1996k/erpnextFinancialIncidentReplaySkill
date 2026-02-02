@@ -27,7 +27,8 @@ jobs:
       # -------------------
       - name: Install UI dependencies
         working-directory: ui
-        run: npm install
+        run: npm install --legacy-peer-deps
+
 
       # -------------------
       # Start UI server
@@ -75,7 +76,7 @@ jobs:
 
       - name: Install UI dependencies
         working-directory: ui
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Start UI
         working-directory: ui
@@ -114,7 +115,8 @@ jobs:
 
       - name: Install UI dependencies
         working-directory: ui
-        run: npm install
+        run: npm install --legacy-peer-deps
+
 
       - name: Start UI
         working-directory: ui
