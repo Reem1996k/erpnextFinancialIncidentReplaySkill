@@ -66,6 +66,7 @@ jobs:
         run: |
           docker compose -f backend/docker-compose.ci.yml down -v
 
+
 # =========================
 # UI TESTS (PLAYWRIGHT)
 # =========================
