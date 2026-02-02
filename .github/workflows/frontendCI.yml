@@ -12,21 +12,50 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # -------------------
+      # Install UI deps
+      # -------------------
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm install
+
+      # -------------------
+      # Start UI server
+      # -------------------
+      - name: Start UI (Next.js)
+        working-directory: ui
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000
+
+      # -------------------
+      # Install Playwright deps
+      # -------------------
+      - name: Install Playwright dependencies
         working-directory: ui
         run: |
           pip install -r requirements.txt
           playwright install --with-deps
 
+      # -------------------
+      # Run SMOKE tests
+      # -------------------
       - name: Run SMOKE tests
         working-directory: ui
         env:
           BASE_URL: http://localhost:3000
         run: pytest -m smoke
+
 
   feature:
     name: Feature Tests
@@ -35,11 +64,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm install
+
+      - name: Start UI
+        working-directory: ui
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000
+
+      - name: Install Playwright dependencies
         working-directory: ui
         run: |
           pip install -r requirements.txt
@@ -47,7 +91,10 @@ jobs:
 
       - name: Run FEATURE tests
         working-directory: ui
+        env:
+          BASE_URL: http://localhost:3000
         run: pytest -m feature
+
 
   e2e:
     name: E2E Tests
@@ -56,11 +103,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm install
+
+      - name: Start UI
+        working-directory: ui
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000
+
+      - name: Install Playwright dependencies
         working-directory: ui
         run: |
           pip install -r requirements.txt
@@ -68,4 +130,6 @@ jobs:
 
       - name: Run E2E tests
         working-directory: ui
+        env:
+          BASE_URL: http://localhost:3000
         run: pytest -m e2e
