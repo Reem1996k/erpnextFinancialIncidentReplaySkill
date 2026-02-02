@@ -10,7 +10,7 @@ jobs:
   api-tests:
     name: API Tests (Fast, No Docker)
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,3 +49,4 @@ jobs:
       - name: Shutdown stack
         if: always()
         run: docker compose -f backend/docker-compose.ci.yml down -v
+
