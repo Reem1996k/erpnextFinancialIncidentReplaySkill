@@ -7,22 +7,13 @@ Provides endpoint to trigger incident analysis with ERP data extraction.
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 import logging
-from app.db.database import SessionLocal
 from app.db.models import Incident
 from app.controllers.incident_controller import resolve_incident
+from app.db.dependencies import get_db
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["analysis"])
-
-
-def get_db():
-    """Dependency for database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 @router.post("/incidents/{incident_id}/analyze")
 def analyze_incident(incident_id: int, db: Session = Depends(get_db)):

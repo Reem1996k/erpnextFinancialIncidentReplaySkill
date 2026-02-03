@@ -1,0 +1,107 @@
+name: UI Tests Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+
+jobs:
+  ui-tests:
+    name: UI Smoke + Feature + E2E
+    runs-on: ubuntu-22.04
+
+    steps:
+      # -------------------
+      # Checkout
+      # -------------------
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # -------------------
+      # Setup Python
+      # -------------------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # -------------------
+      # Setup Node.js
+      # -------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      # =====================================================
+      # BACKEND
+      # =====================================================
+      - name: Install Backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Start Backend API
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///./test_incidents.db
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+
+      # =====================================================
+      # UI (Next.js)
+      # =====================================================
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm ci
+
+      - name: Clear Next.js cache
+        working-directory: ui
+        run: rm -rf .next
+
+      # 🔴 חשוב: Build (לא dev!)
+      - name: Build UI
+        working-directory: ui
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npm run build
+
+      - name: Start UI (production)
+        working-directory: ui
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: |
+          npm run start &
+          npx wait-on http://localhost:3000 --timeout 120000
+
+      # =====================================================
+      # Playwright
+      # =====================================================
+      - name: Install Playwright
+        working-directory: ui
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps
+
+      # =====================================================
+      # TESTS
+      # =====================================================
+      - name: Run SMOKE tests
+        working-directory: ui
+        env:
+          BASE_URL: http://localhost:3000
+        run: pytest -m smoke
+
+      - name: Run FEATURE tests
+        working-directory: ui
+        env:
+          BASE_URL: http://localhost:3000
+        run: pytest -m feature
+
+      - name: Run E2E tests
+        working-directory: ui
+        env:
+          BASE_URL: http://localhost:3000
+        run: pytest -m e2e
