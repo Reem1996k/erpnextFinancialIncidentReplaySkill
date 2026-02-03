@@ -23,5 +23,5 @@ class CreateIncidentPage:
 
     def submit(self):
         self.page.get_by_role("button", name="Create & Analyze").click()
-        self.page.get_by_text("Status").wait_for()
+        self.page.wait_for_url("**/incidents/*", timeout=30000)
 
