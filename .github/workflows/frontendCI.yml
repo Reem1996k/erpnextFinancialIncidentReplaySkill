@@ -55,7 +55,7 @@ jobs:
       - name: Install UI dependencies
         working-directory: ui
         run: |
-          npm ci --legacy-peer-deps
+          npm install --legacy-peer-deps
 
       - name: Build UI with API URL
         working-directory: ui
