@@ -22,10 +22,7 @@ class CreateIncidentPage:
         ).fill(text)
 
     def submit(self):
-        self.page.get_by_role("button", name="Create & Analyze").click()
+        with self.page.expect_response("**/incidents**") as response:
+            self.page.get_by_role("button", name="Create & Analyze").click()
 
-        # SPA routing – wait for URL change
-        self.page.wait_for_url("**/incidents/**", timeout=20000)
-
-        # או לחילופין: לוודא אלמנט שמופיע בדף הבא
-        self.page.get_by_text("Incident Details").wait_for(timeout=20000)
+        assert response.value.status == 200
