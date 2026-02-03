@@ -1,4 +1,4 @@
-name: UI Tests Pipeline
+name: UI Tests Pipeline (NGROK FE)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   ui-tests:
-    name: UI Smoke + Feature + E2E
+    name: UI Smoke + Feature + E2E via NGROK
     runs-on: ubuntu-22.04
 
     steps:
@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: ui/package-lock.json
 
       # =====================================================
-      # BACKEND
+      # BACKEND (Local 8000)
       # =====================================================
       - name: Install Backend dependencies
         working-directory: backend
@@ -44,37 +44,33 @@ jobs:
 
       - name: Start Backend API
         working-directory: backend
-        env:
-          DATABASE_URL: sqlite:///./test_incidents.db
         run: |
           uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 5
-          
+
       # =====================================================
-      # UI (Next.js)
+      # FRONTEND (DEV 3000)
       # =====================================================
       - name: Install UI dependencies
         working-directory: ui
         run: npm install --legacy-peer-deps
 
-      - name: Clear Next.js cache
-        working-directory: ui
-        run: rm -rf .next
-
-    
-      - name: Build UI
-        working-directory: ui
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
-        run: npm run build
-
-      - name: Start UI (production)
+      - name: Start UI (DEV)
         working-directory: ui
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
         run: |
-          npm run start &
+          npm run dev &
           npx wait-on http://localhost:3000 --timeout 120000
+
+      # =====================================================
+      # NGROK (Expose Frontend)
+      # =====================================================
+      - name: Start ngrok for Frontend
+        uses: ngrok/ngrok-action@v3
+        with:
+          authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
+          args: http 3000
 
       # =====================================================
       # Playwright
@@ -85,26 +81,11 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium
 
-
       # =====================================================
       # TESTS
       # =====================================================
-      - name: Run SMOKE tests
+      - name: Run UI tests via NGROK
         working-directory: ui
         env:
-          BASE_URL: http://localhost:3000
-        run: pytest -m smoke
-
-      - name: Run FEATURE tests
-        working-directory: ui
-        env:
-          BASE_URL: http://localhost:3000
-        run: pytest -m feature
-
-      - name: Run E2E tests
-        working-directory: ui
-        env:
-          BASE_URL: http://localhost:3000
-        run: pytest -m e2e
-
-      # =====================================================
+          BASE_URL: http://localhost:4040/api/tunnels/command_line/url
+        run: pytest
