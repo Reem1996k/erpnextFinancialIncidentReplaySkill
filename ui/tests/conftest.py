@@ -4,13 +4,16 @@ import pytest
 from playwright.sync_api import Page
 
 
-@pytest.fixture(scope="session")
-def browser_context_args(browser_context_args):
-    """Configure browser context with base URL (CI / Local compatible)"""
-    return {
-        **browser_context_args,
-        "baseURL": os.getenv("APP_URL", "http://localhost:3000"),
-    }
+"""Pytest configuration for UI tests"""
+import os
+import pytest
+
+def pytest_configure(config):
+    # pytest-base-url plugin
+    config.option.base_url = os.getenv(
+        "APP_URL",
+        "http://localhost:3000"
+    )
 
 
 @pytest.fixture
