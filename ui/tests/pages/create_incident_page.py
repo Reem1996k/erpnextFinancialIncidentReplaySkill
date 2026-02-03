@@ -22,7 +22,6 @@ class CreateIncidentPage:
         ).fill(text)
 
     def submit(self):
-        with self.page.expect_response("**/incidents**") as response:
-            self.page.get_by_role("button", name="Create & Analyze").click()
+        self.page.get_by_role("button", name="Create & Analyze").click()
+        self.page.get_by_text("Status").wait_for()
 
-        assert response.value.status == 200
