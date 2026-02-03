@@ -14,22 +14,19 @@
     "jsx": "react-jsx",
     "incremental": true,
 
-    "baseUrl": ".",                // 👈 שורש של ui/
+    "baseUrl": ".",        // 👈 שורש Next = ui/
     "paths": {
-      "@/*": ["*"]                 // 👈 @/lib/api → ui/lib/api.ts
+      "@/*": ["./*"]       // 👈 resolves to ui/*
     },
 
-    "plugins": [
-      { "name": "next" }
-    ]
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
