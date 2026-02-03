@@ -1,10 +1,10 @@
 import os
-import pytest
+from playwright.sync_api import Playwright
 
-@pytest.fixture(autouse=True)
-def handle_ngrok_warning(page):
-    if "ngrok-free.dev" in (os.getenv("APP_URL") or ""):
-        try:
-            page.get_by_role("button", name="Visit Site").click(timeout=5000)
-        except:
-            pass
+def pytest_configure(config):
+    base_url = os.getenv(
+        "APP_URL",
+        "http://localhost:3000"  # fallback ללוקאל
+    )
+    config.base_url = base_url
+
