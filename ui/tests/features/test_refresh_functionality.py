@@ -31,14 +31,14 @@ def test_page_reload_preserves_open_status(page):
     create_page.fill_description("Test incident for page reload functionality")
     create_page.submit()
 
-    # Step 2: Verify initial page load - status should be OPEN
-    incident_page.expect_status("OPEN")
+    # Step 2: Verify initial page load - status should be Open
+    incident_page.expect_status("Open")
 
     # Step 3: Reload the page (browser refresh)
     page.reload(wait_until="networkidle")
 
     # Step 4: Verify status is still visible after reload
-    incident_page.expect_status("OPEN")
+    incident_page.expect_status("Open")
 
 
 @pytest.mark.feature
@@ -63,12 +63,12 @@ def test_page_reload_preserves_resolved_status(page):
     create_page.submit()
 
     # Step 2: Run analysis and wait for resolution
-    incident_page.expect_status("OPEN")
+    incident_page.expect_status("Open")
     incident_page.run_analysis()
     incident_page.wait_for_resolved()
 
     # Step 3: Reload the page
     page.reload(wait_until="networkidle")
 
-    # Step 4: Verify RESOLVED status is preserved
-    incident_page.expect_status("RESOLVED")
+    # Step 4: Verify Resolved status is preserved
+    incident_page.expect_status("Resolved")
