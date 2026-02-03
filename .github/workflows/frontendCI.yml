@@ -62,7 +62,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
         run: |
-          npm run build
+          npx next build --no-turbopack
 
       - name: Start UI server
         working-directory: ui
