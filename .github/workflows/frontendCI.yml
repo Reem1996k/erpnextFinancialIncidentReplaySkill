@@ -44,6 +44,10 @@ jobs:
         working-directory: ui
         run: npm install --legacy-peer-deps
 
+      - name: Clear Next.js cache
+        working-directory: ui
+        run: rm -rf .next
+
       # -------------------
       # Start UI server
       # -------------------
@@ -110,6 +114,10 @@ jobs:
         working-directory: ui
         run: npm install --legacy-peer-deps
 
+      - name: Clear Next.js cache
+        working-directory: ui
+        run: rm -rf .next
+
       - name: Start UI
         working-directory: ui
         run: |
@@ -167,6 +175,9 @@ jobs:
         working-directory: ui
         run: npm install --legacy-peer-deps
 
+      - name: Clear Next.js cache
+        working-directory: ui
+        run: rm -rf .next
 
       - name: Start UI
         working-directory: ui

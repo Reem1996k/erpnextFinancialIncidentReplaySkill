@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Empty config is fine - tsconfig.json paths are used automatically
 };
 
 export default nextConfig;
