@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   api-tests:
     name: API Tests (Fast, No Docker)
@@ -13,6 +17,7 @@ jobs:
  
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -26,7 +31,15 @@ jobs:
         working-directory: backend
         env:
           AI_ENABLED: "true"
-        run: pytest tests/api
+        run: |
+          pytest tests/api -v --alluredir=allure-results
+
+      - name: Generate Allure Report (API)
+        uses: allure-framework/allure-action@v0
+        with:
+          allure-results: backend/allure-results
+          allure-report: backend/allure-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   integration-tests:
     name: Integration Tests (Docker + ERPNext)
@@ -49,4 +62,3 @@ jobs:
       - name: Shutdown stack
         if: always()
         run: docker compose -f backend/docker-compose.ci.yml down -v
-

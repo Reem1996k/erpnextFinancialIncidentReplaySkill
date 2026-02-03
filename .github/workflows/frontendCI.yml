@@ -1,10 +1,13 @@
-name: Playwright UI Tests (via NGROK)
+name: Playwright UI Tests (with Allure)
 
 on:
   pull_request:
     branches: [ main, dev ]
-
   workflow_dispatch:
+
+permissions:
+  checks: write
+  pull-requests: write
 
 jobs:
   playwright-tests:
@@ -45,9 +48,9 @@ jobs:
           curl -f http://127.0.0.1:8000/health || echo "Backend started"
 
       # -------------------
-      # Install Playwright dependencies
+      # Install UI / Playwright dependencies
       # -------------------
-      - name: Install Playwright dependencies
+      - name: Install UI dependencies
         working-directory: ui
         run: |
           pip install -r requirements.txt
@@ -59,7 +62,7 @@ jobs:
         run: python -m playwright install chromium
 
       # -------------------
-      # Run Playwright tests
+      # Run Playwright tests with Allure
       # -------------------
       - name: Run Playwright tests
         working-directory: ui
@@ -67,4 +70,14 @@ jobs:
           HEADLESS: true
           APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
         run: |
-          pytest tests/ -v
+          pytest tests/ -v --alluredir=allure-results
+
+      # -------------------
+      # Generate Allure Report
+      # -------------------
+      - name: Generate Allure Report
+        uses: allure-framework/allure-action@v0
+        with:
+          allure-results: ui/allure-results
+          allure-report: ui/allure-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}
