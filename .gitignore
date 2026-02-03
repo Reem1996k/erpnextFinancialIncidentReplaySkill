@@ -222,3 +222,10 @@ pnpm-debug.log*
 .env
 .env.*
 
+# Allure (backend)
+backend/allure-results/
+backend/allure-report/
+
+# Allure (ui)
+ui/allure-results/
+ui/allure-report/

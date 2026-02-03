@@ -8,5 +8,5 @@ sqlalchemy
 jinja2
 requests
 python-dotenv
-
+allure-pytest
 
