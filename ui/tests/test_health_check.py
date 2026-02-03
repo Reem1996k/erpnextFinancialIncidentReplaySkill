@@ -27,7 +27,7 @@ def test_frontend_accessible(page):
     """Verify frontend is accessible (local + CI)"""
     try:
         page.goto("/", timeout=10000)
-        expect(page).to_have_title("Financial Incident Replay - Enterprise Platform")
+        expect(page.get_by_text("Create Financial Incident")).to_be_visible()
         print("✓ Frontend is running")
     except Exception as e:
         pytest.fail(

@@ -1,10 +1,14 @@
 import os
 import pytest
 
-@pytest.fixture(autouse=True)
-def handle_ngrok_warning(page):
-    if "ngrok-free.dev" in (os.getenv("APP_URL") or ""):
-        try:
-            page.get_by_role("button", name="Visit Site").click(timeout=5000)
-        except:
-            pass
+@pytest.fixture(scope="session")
+def browser_context_args(browser_context_args):
+    context = dict(browser_context_args)
+
+    # ✅ Skip NGROK warning page
+    if os.getenv("APP_URL"):
+        context["extra_http_headers"] = {
+            "ngrok-skip-browser-warning": "true"
+        }
+
+    return context

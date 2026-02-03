@@ -7,7 +7,8 @@ class CreateIncidentPage:
 
     def open(self):
         self.page.goto("/")
-        self.page.get_by_role("button", name="Create & Analyze").wait_for(timeout=20000)
+        self.page.wait_for_load_state("networkidle")
+        self.page.get_by_role("button", name="Create & Analyze").wait_for(timeout=30000)
 
     def fill_erp_reference(self, value: str):
         self.page.get_by_placeholder("e.g., INV-2024-001234").fill(value)
