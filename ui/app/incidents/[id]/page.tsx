@@ -137,7 +137,7 @@ export default function IncidentDetailPage() {
               </div>
               <div className="summary-item">
                 <p className="summary-label">Analysis Source</p>
-                <p className="summary-value">{incident.is_rule_based ? 'RULE' : 'AI'}</p>
+                <p className="summary-value">{incident.analysis_source || 'N/A'}</p>
               </div>
             </div>
 

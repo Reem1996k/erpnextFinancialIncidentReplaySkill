@@ -51,7 +51,8 @@ jobs:
         working-directory: ui
         run: |
           npm run dev &
-          npx wait-on http://localhost:3000
+          sleep 10
+          npx wait-on http://localhost:3000 --timeout 120000
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
 
@@ -113,7 +114,8 @@ jobs:
         working-directory: ui
         run: |
           npm run dev &
-          npx wait-on http://localhost:3000
+          sleep 10
+          npx wait-on http://localhost:3000 --timeout 120000
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
 
@@ -170,7 +172,8 @@ jobs:
         working-directory: ui
         run: |
           npm run dev &
-          npx wait-on http://localhost:3000
+          sleep 10
+          npx wait-on http://localhost:3000 --timeout 120000
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
 
