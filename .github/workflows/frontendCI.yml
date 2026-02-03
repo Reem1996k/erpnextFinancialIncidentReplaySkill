@@ -1,4 +1,4 @@
-name: Playwright UI Tests (local UI + API)
+name: Playwright UI Tests (via NGROK)
 
 on:
   pull_request:
@@ -26,106 +26,19 @@ jobs:
           python-version: '3.12'
 
       # -------------------
-      # Setup Node.js
+      # Install dependencies
       # -------------------
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-
-      # -------------------
-      # Start Backend (FastAPI)
-      # -------------------
-      - name: Install backend dependencies
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Start backend server
-        working-directory: backend
-        run: |
-          nohup python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          echo "Waiting for backend..."
-          for i in {1..30}; do curl -sSf http://127.0.0.1:8000/health && break || sleep 2; done
-
-      # -------------------
-      # Build & Start Frontend (Next.js)
-      # -------------------
-      - name: Install UI dependencies
-        working-directory: ui
-        run: |
-          npm install --legacy-peer-deps
-
-      - name: Build UI with API URL
-        working-directory: ui
-        env:
-          NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
-        run: |
-          npx next build
-
-      - name: Start UI server
-        working-directory: ui
-        env:
-          PORT: 3000
-        run: |
-          nohup npm run start &
-          echo "Waiting for frontend..."
-          for i in {1..30}; do curl -sSf http://127.0.0.1:3000 && break || sleep 2; done
-
-      # -------------------
-      # Frontend ngrok tunnel
-      # -------------------
-      - name: Install and start ngrok
-        id: ngrok
-        env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-        run: |
-          # Download and install ngrok
-          curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-            | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt-get update && sudo apt-get install -y ngrok
-          
-          # Configure ngrok with auth token
-          ngrok config add-authtoken "$NGROK_AUTH_TOKEN"
-          
-          # Start ngrok tunnel in background and capture URL
-          nohup ngrok http 3000 --log=stdout > ngrok.log 2>&1 &
-          
-          # Wait for tunnel to be established and extract URL
-          sleep 5
-          for i in {1..30}; do
-            NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url // empty')
-            if [ -n "$NGROK_URL" ]; then
-              echo "ngrok URL: $NGROK_URL"
-              echo "url=$NGROK_URL" >> $GITHUB_OUTPUT
-              break
-            fi
-            echo "Waiting for ngrok tunnel..."
-            sleep 2
-          done
-          
-          # Verify we got a URL
-          if [ -z "$NGROK_URL" ]; then
-            echo "Failed to get ngrok URL"
-            cat ngrok.log
-            exit 1
-          fi
-
-      # -------------------
-      # Install Playwright (browsers)
-      # -------------------
-      - name: Install Python test dependencies
+      - name: Install Python dependencies
         working-directory: ui
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # -------------------
+      # Install Playwright browsers
+      # -------------------
       - name: Install Playwright browsers
-        run: |
-          python -m playwright install chromium
+        run: python -m playwright install chromium
 
       # -------------------
       # Run Playwright tests
@@ -134,7 +47,6 @@ jobs:
         working-directory: ui
         env:
           HEADLESS: true
-          APP_URL: ${{ steps.ngrok.outputs.url }}
+          APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
         run: |
-          echo "Testing against: $APP_URL"
           pytest tests/ -v
