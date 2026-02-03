@@ -3,7 +3,7 @@
  * Handles all communication with the backend
  */
 
-import { Incident, IncidentsResponse, ReplayResponse, ApiError } from "@/lib/types";
+import { Incident, IncidentsResponse, ReplayResponse, ApiError } from "@/app/lib/types";
 
 const API_BASE_URL = "http://localhost:8000";
 

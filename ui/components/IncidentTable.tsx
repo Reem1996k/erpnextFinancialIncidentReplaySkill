@@ -4,7 +4,7 @@
  */
 
 import Link from "next/link";
-import { Incident } from "@/lib/types";
+import { Incident } from "@/app/lib/types";
 
 interface IncidentTableProps {
   incidents: Incident[];

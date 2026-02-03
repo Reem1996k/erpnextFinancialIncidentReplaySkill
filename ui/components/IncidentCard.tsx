@@ -4,7 +4,7 @@
  */
 
 import { FileText, AlertTriangle, RotateCcw } from 'lucide-react';
-import { Incident } from '@/lib/api';
+import { Incident } from '@/app/lib/api';
 import { StatusBadge } from './StatusBadge';
 import { ConfidenceBar } from './ConfidenceBar';
 import Link from 'next/link';

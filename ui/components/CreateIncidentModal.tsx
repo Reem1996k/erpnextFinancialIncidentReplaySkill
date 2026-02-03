@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createIncident } from '@/lib/api';
+import { createIncident } from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 
