@@ -66,8 +66,7 @@ jobs:
         working-directory: ui
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
-          NEXT_DISABLE_TURBOPACK: 1
-        run: npm run build
+        run: npm run build -- --webpack
 
 
       - name: Start UI (production)

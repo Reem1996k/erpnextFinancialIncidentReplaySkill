@@ -1,11 +1,12 @@
-import path from 'path';
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
-  turbopack: {}, // 👈 זה השורה הקריטית (חייבת להיות!)
-
   webpack: (config) => {
-    config.resolve.alias['@'] = path.resolve(__dirname);
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+    };
     return config;
   },
 };

@@ -11,15 +11,17 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "incremental": true,
-
-    "baseUrl": ".",        // 👈 שורש Next = ui/
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]       // 👈 resolves to ui/*
+      "@/*": ["./*"]
     },
-
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
