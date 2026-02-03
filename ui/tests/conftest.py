@@ -5,10 +5,11 @@ import pytest
 def browser_context_args(browser_context_args):
     context = dict(browser_context_args)
 
-    # ✅ Skip NGROK warning page
-    if os.getenv("APP_URL"):
-        context["extra_http_headers"] = {
-            "ngrok-skip-browser-warning": "true"
-        }
+    base_url = os.getenv("APP_URL") or "http://localhost:3000"
+
+    context["base_url"] = base_url
+    context["extra_http_headers"] = {
+        "ngrok-skip-browser-warning": "true"
+    }
 
     return context
