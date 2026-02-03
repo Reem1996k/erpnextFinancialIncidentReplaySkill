@@ -11,6 +11,7 @@ permissions:
   pull-requests: write
 
 jobs:
+
   api-tests:
     name: API Tests (Fast, No Docker)
     runs-on: ubuntu-latest
@@ -40,6 +41,11 @@ jobs:
           allure-results: backend/allure-results
           allure-report: backend/allure-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
     name: Integration Tests (Docker + ERPNext)
