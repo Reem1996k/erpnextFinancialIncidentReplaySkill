@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getIncidents, Incident } from '@/app/lib/api';
+import { getIncidents, Incident } from '@/lib/api';
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);

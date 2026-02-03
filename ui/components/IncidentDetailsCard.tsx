@@ -3,7 +3,7 @@
  * Displays incident information in a structured format
  */
 
-import { Incident } from "@/app/lib/types";
+import { Incident } from "@/lib/types";
 
 interface IncidentDetailsCardProps {
   incident: Incident;

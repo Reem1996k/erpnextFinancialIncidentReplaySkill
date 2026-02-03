@@ -3,7 +3,7 @@
  * Displays replay analysis results
  */
 
-import { ReplayResponse } from "@/app/lib/types";
+import { ReplayResponse } from "@/lib/types";
 import { DecisionBadge } from "./DecisionBadge";
 
 interface AnalysisSummaryProps {

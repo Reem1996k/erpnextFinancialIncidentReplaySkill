@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { getIncident, runAnalysis, Incident, AnalysisResponse } from '@/app/lib/api';
+import { getIncident, runAnalysis, Incident, AnalysisResponse } from '@/lib/api';
 
 export default function IncidentDetailPage() {
   const params = useParams();

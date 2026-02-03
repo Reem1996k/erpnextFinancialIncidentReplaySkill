@@ -3,7 +3,7 @@
  * Displays the replay decision with appropriate styling
  */
 
-import { ReplayDecision } from "@/app/lib/types";
+import { ReplayDecision } from "@/lib/types";
 
 interface DecisionBadgeProps {
   decision: ReplayDecision;

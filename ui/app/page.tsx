@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createIncident } from '@/app/lib/api';
+import { createIncident } from '@/lib/api';
 
 export default function CreateIncidentPage() {
   const router = useRouter();
