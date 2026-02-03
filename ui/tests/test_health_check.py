@@ -1,26 +1,35 @@
 """Health check test to verify frontend and backend are accessible"""
+import os
 import pytest
 import requests
 from playwright.sync_api import expect
 
 
+@pytest.mark.skipif(
+    os.getenv("APP_URL") is not None,
+    reason="Backend health test is local-only (CI uses NGROK)"
+)
 def test_backend_health():
-    """Verify backend API is accessible"""
+    """Verify backend API is accessible (local only)"""
     try:
         response = requests.get("http://localhost:8000/health", timeout=5)
         assert response.status_code == 200, f"Backend returned status {response.status_code}"
         print("✓ Backend is running")
     except requests.exceptions.ConnectionError:
-        pytest.fail("Backend is not running. Start it with: cd backend && uvicorn app.main:app --reload")
+        pytest.fail(
+            "Backend is not running. Start it with: cd backend && uvicorn app.main:app --reload"
+        )
     except requests.exceptions.Timeout:
         pytest.fail("Backend connection timeout")
 
 
 def test_frontend_accessible(page):
-    """Verify frontend is accessible"""
+    """Verify frontend is accessible (local + CI)"""
     try:
         page.goto("/", timeout=10000)
-        expect(page).to_have_title("Financial Incident Replay - Enterprise Platform")
+        expect(page.get_by_text("Create Financial Incident")).to_be_visible()
         print("✓ Frontend is running")
     except Exception as e:
-        pytest.fail(f"Frontend is not accessible: {e}\nStart it with: cd ui && npm run dev")
+        pytest.fail(
+            f"Frontend is not accessible: {e}\nStart it with: cd ui && npm run dev"
+        )

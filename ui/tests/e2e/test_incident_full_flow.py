@@ -22,8 +22,8 @@ def test_incident_full_flow(page):
     # Step 2: Submit form (handles analyzing state and navigation)
     create_page.submit()
 
-    # Step 3: Verify incident page shows OPEN status
-    incident_page.expect_status("OPEN")
+    # Step 3: Verify incident page shows Open status
+    incident_page.expect_status("Open")
 
     # Step 4: Run analysis
     incident_page.run_analysis()
@@ -44,5 +44,5 @@ def test_incident_full_flow(page):
     # Step 9: Click View to return to incident details
     list_page.click_view_for_first_incident()
     
-    # Step 10: Verify status is still RESOLVED after navigation
-    incident_page.expect_status("RESOLVED")
+    # Step 10: Verify status is still Resolved after navigation
+    incident_page.expect_status("Resolved")

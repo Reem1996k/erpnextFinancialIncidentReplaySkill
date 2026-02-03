@@ -1,6 +1,10 @@
+import os
 from playwright.sync_api import Playwright
 
-BASE_URL = "http://localhost:3000"
-
 def pytest_configure(config):
-    config.option.base_url = BASE_URL
+    base_url = os.getenv(
+        "APP_URL",
+        "http://localhost:3000"  # fallback ללוקאל
+    )
+    config.base_url = base_url
+
