@@ -23,12 +23,26 @@ jobs:
           node-version: '20'
 
       # -------------------
+      # Start Backend API
+      # -------------------
+      - name: Install Backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Start Backend API
+        working-directory: backend
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+        env:
+          DATABASE_URL: sqlite:///./test_incidents.db
+
+      # -------------------
       # Install UI deps
       # -------------------
       - name: Install UI dependencies
         working-directory: ui
         run: npm install --legacy-peer-deps
-
 
       # -------------------
       # Start UI server
@@ -38,6 +52,8 @@ jobs:
         run: |
           npm run dev &
           npx wait-on http://localhost:3000
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
 
       # -------------------
       # Install Playwright deps
@@ -74,6 +90,21 @@ jobs:
         with:
           node-version: '20'
 
+      # -------------------
+      # Start Backend API
+      # -------------------
+      - name: Install Backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Start Backend API
+        working-directory: backend
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+        env:
+          DATABASE_URL: sqlite:///./test_incidents.db
+
       - name: Install UI dependencies
         working-directory: ui
         run: npm install --legacy-peer-deps
@@ -83,6 +114,8 @@ jobs:
         run: |
           npm run dev &
           npx wait-on http://localhost:3000
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
 
       - name: Install Playwright dependencies
         working-directory: ui
@@ -113,6 +146,21 @@ jobs:
         with:
           node-version: '20'
 
+      # -------------------
+      # Start Backend API
+      # -------------------
+      - name: Install Backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Start Backend API
+        working-directory: backend
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+        env:
+          DATABASE_URL: sqlite:///./test_incidents.db
+
       - name: Install UI dependencies
         working-directory: ui
         run: npm install --legacy-peer-deps
@@ -123,6 +171,8 @@ jobs:
         run: |
           npm run dev &
           npx wait-on http://localhost:3000
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
 
       - name: Install Playwright dependencies
         working-directory: ui
