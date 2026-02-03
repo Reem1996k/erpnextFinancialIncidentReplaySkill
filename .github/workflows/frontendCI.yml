@@ -55,7 +55,7 @@ jobs:
       # =====================================================
       - name: Install UI dependencies
         working-directory: ui
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Clear Next.js cache
         working-directory: ui
