@@ -67,7 +67,8 @@ jobs:
       # NGROK (Expose Frontend)
       # =====================================================
       - name: Start ngrok for Frontend
-        uses: ngrok/ngrok-action@v3
+        uses: ngrok/ngrok@v3
+
         with:
           authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
           args: http 3000
