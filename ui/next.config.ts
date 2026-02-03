@@ -1,15 +1,11 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  // Explicit webpack config for path alias
-  webpack: (config) => {
-    config.resolve = config.resolve || {};
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.join(process.cwd()),
-    };
-    return config;
+  // Turbopack config for path alias (Next.js 16 default bundler)
+  turbopack: {
+    resolveAlias: {
+      '@': './',
+    },
   },
 };
 
