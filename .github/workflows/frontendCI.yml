@@ -80,11 +80,12 @@ jobs:
       # =====================================================
       # Playwright
       # =====================================================
-      - name: Install Playwright
+      - name: Install Playwright (Python)
         working-directory: ui
         run: |
           pip install -r requirements.txt
-          playwright install --with-deps
+          playwright install chromium
+
 
       # =====================================================
       # TESTS
