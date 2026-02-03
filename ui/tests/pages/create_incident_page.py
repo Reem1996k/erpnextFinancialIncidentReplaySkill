@@ -22,7 +22,10 @@ class CreateIncidentPage:
         ).fill(text)
 
     def submit(self):
-        # Click submit and wait for navigation to complete
-        with self.page.expect_navigation(url="**/incidents/*", timeout=20000):
-            self.page.get_by_role("button", name="Create & Analyze").click()
+        self.page.get_by_role("button", name="Create & Analyze").click()
 
+        # SPA routing – wait for URL change
+        self.page.wait_for_url("**/incidents/**", timeout=20000)
+
+        # או לחילופין: לוודא אלמנט שמופיע בדף הבא
+        self.page.get_by_text("Incident Details").wait_for(timeout=20000)
