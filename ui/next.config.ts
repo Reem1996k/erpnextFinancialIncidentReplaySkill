@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Disable Turbopack, use webpack
-  experimental: {
-    turbo: false,
-  },
   // Explicit webpack config for path alias
   webpack: (config) => {
     config.resolve = config.resolve || {};
