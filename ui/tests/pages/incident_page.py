@@ -18,15 +18,16 @@ class IncidentPage:
 
     def expect_analyzing(self):
         """Wait for analyzing state: 'Analyzing...' text visible"""
-        # Wait for analyzing indicator to appear
+        # Wait for analyzing indicator to appear (matches both "Analyzing..." and "⏳ Analyzing...")
         expect(
-            self.page.get_by_text("Analyzing...")
+            self.page.get_by_text(re.compile(r'Analyzing\.\.\.'))
         ).to_be_visible(timeout=10000)
 
     def wait_for_resolved(self):
-        """Wait for analysis to complete and status to change to RESOLVED"""
+        """Wait for analysis to complete and status to change to Resolved"""
+        # UI displays "Resolved" (title case) not "RESOLVED"
         expect(
-            self.page.get_by_text("RESOLVED")
+            self.page.get_by_text("Resolved")
         ).to_be_visible(timeout=60000)
 
     def expect_confidence(self):
