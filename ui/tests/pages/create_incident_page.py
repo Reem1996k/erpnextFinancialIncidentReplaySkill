@@ -6,7 +6,7 @@ class CreateIncidentPage:
         self.page = page
 
     def open(self):
-        self.page.goto(self.page.context._options["baseURL"])
+        self.page.goto("/")
         self.page.get_by_role("button", name="Create & Analyze").wait_for(timeout=20000)
 
     def fill_erp_reference(self, value: str):
