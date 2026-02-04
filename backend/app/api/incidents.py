@@ -10,6 +10,7 @@ Requirements:
 
 """
 
+import os
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.models.incident import IncidentCreate, IncidentResponse
@@ -80,3 +81,10 @@ async def get_incident(
     if db_incident is None:
         raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
     return db_incident
+
+@router.get("/debug/ai")
+def debug_ai():
+    return {
+        "AI_ENABLED_RAW": os.getenv("AI_ENABLED"),
+        "AI_ENABLED_PARSED": os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
+    }

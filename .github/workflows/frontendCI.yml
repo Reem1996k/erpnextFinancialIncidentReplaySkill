@@ -49,6 +49,12 @@ jobs:
             --log-level debug &
           sleep 5
           curl -f http://127.0.0.1:8000/health || echo "Backend started"
+      
+      - name: Debug AI status from backend
+        run: |
+          echo "=== DEBUG AI STATUS ==="
+          curl http://127.0.0.1:8000/debug/ai
+
 
       # -------------------
       # Install UI / Playwright dependencies
