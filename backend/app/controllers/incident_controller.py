@@ -10,8 +10,6 @@ from app.ai.ai_factory import get_ai_client
 from app.integrations.client_factory import get_erp_client
 from fastapi import HTTPException, status
 
-from app.models import incident
-
 
 """
     Create a new incident in the database.
@@ -98,28 +96,38 @@ def get_all_incidents(db: Session) -> list[Incident]:
         HTTPException: 503 if AI_ENABLED is false
         HTTPException: 404 if incident not found
 """
-def resolve_incident(incident_id: int, db: Session):
+def resolve_incident(incident_id: int, db: Session) -> Incident | None:
     logger = logging.getLogger(__name__)
 
-    logger.info("=== resolve_incident CALLED ===")
+    logger.info("=== resolve_incident START ===")
+    logger.info(f"Incident ID: {incident_id}")
 
-    raw_value = os.getenv("AI_ENABLED")
-    logger.info(f"AI_ENABLED raw value: {raw_value!r}")
+    incident = get_incident_by_id(incident_id, db)
+    if incident is None:
+        logger.warning(f"Incident {incident_id} not found")
+        return None
 
-    ai_enabled = str(raw_value).strip().lower() in ("true", "1", "yes", "on")
-    logger.info(f"AI_ENABLED parsed to bool: {ai_enabled}")
+    raw_ai_enabled = os.getenv("AI_ENABLED")
+    logger.info(f"Raw AI_ENABLED env value: {raw_ai_enabled!r}")
+
+    ai_enabled = str(raw_ai_enabled).strip().lower() in ("true", "1", "yes", "on")
+    logger.info(f"Parsed AI_ENABLED (boolean): {ai_enabled}")
 
     if not ai_enabled:
-        logger.error("AI is DISABLED – stopping here")
+        logger.error(
+            f"AI_DISABLED – cannot resolve incident {incident_id}"
+        )
         raise HTTPException(
-            status_code=503,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI analysis is disabled. Set AI_ENABLED=true to use this feature."
         )
 
-    logger.info("AI is ENABLED – going to AI resolver")
+    logger.info(
+        f"AI_ENABLED – proceeding with AI resolution for incident {incident_id}"
+    )
+
     return _resolve_with_ai(incident, incident_id, db)
 
-    
 
 """
     Resolve using AI analysis only.
