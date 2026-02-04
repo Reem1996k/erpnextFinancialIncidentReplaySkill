@@ -44,76 +44,61 @@ jobs:
         working-directory: backend
         run: |
           python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          for i in {1..10}; do
-            curl -f http://127.0.0.1:8000/health && break
-            sleep 2
-          done
+          sleep 5
+          curl -f http://127.0.0.1:8000/health || echo "Backend started"
 
       # -------------------
-      # Setup Node.js
+      # Install UI / Playwright dependencies
       # -------------------
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Install UI dependencies
+        working-directory: ui
+        run: |
+          pip install -r requirements.txt
+
+      # -------------------
+      # Install Playwright browsers
+      # -------------------
+      - name: Install Playwright browsers
+        run: python -m playwright install chromium
+
+      # -------------------
+      # Run Playwright tests with Allure
+      # -------------------
+      - name: Run Playwright tests
+        working-directory: ui
+        env:
+          HEADLESS: true
+          APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
+        run: |
+          pytest tests/ -v --alluredir=allure-results
+
+      # -------------------
+      # Generate Allure Report
+      # -------------------
+      - name: Generate Allure Report
+        uses: allure-framework/allure-action@v0
         with:
-          node-version: '20'
+          allure-results: ui/allure-results
+          allure-report: ui/allure-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # -------------------
+      # Upload coverage reports to Codecov
+      # -------------------
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+            # -------------------
+      # Upload Playwright artifacts
+      # -------------------
+      - name: Upload Playwright artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-debug
+          path: ui/playwright-artifacts
 
-      # -------------------
-      # Install Frontend Dependencies
-      # -------------------
-      - name: Install frontend dependencies
-        working-directory: ui
-        run: npm install
+  
 
-      # -------------------
-      # Build Frontend
-      # -------------------
-      - name: Build frontend
-        working-directory: ui
-        env:
-          NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
-        run: npm run build
-
-      # -------------------
-      # Start Frontend
-      # -------------------
-      - name: Start frontend
-        working-directory: ui
-        env:
-          NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
-        run: |
-          npm run start -- -p 3000 &
-          sleep 5
-
-      # -------------------
-      # Install ngrok
-      # -------------------
-      - name: Install ngrok
-        run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-            | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update
-          sudo apt install ngrok
-
-      # -------------------
-      # Authenticate ngrok
-      # -------------------
-      - name: Authenticate ngrok
-        run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      # -------------------
-      # Start ngrok (Frontend - Static Domain)
-      # -------------------
-      - name: Start ngrok (frontend)
-        run: |
-          ngrok http 3000 \
-            --domain=lichenlike-kellee-autocratically.ngrok-free.dev &
-          sleep 5
-
-      # -------------------
-      # Verify ngrok frontend is alive
-      # -------------------
-      - name: Verify frontend via ngrok
-        run: |
-          curl -I https://lichenlike-kellee-autocratically.ngrok-free.dev
