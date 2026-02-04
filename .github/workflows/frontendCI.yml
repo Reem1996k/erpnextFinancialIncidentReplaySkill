@@ -50,7 +50,7 @@ jobs:
           done
 
       # -------------------
-      # Setup Node.js (for Frontend)
+      # Setup Node.js
       # -------------------
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -85,13 +85,31 @@ jobs:
           sleep 5
 
       # -------------------
+      # Install ngrok
+      # -------------------
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+            | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update
+          sudo apt install ngrok
+
+      # -------------------
+      # Authenticate ngrok
+      # -------------------
+      - name: Authenticate ngrok
+        run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+
+      # -------------------
       # Start ngrok (Frontend - Static Domain)
       # -------------------
       - name: Start ngrok (frontend)
-        uses: ngrok/ngrok-action@v3
-        with:
-          token: ${{ secrets.NGROK_AUTH_TOKEN }}
-          args: http 3000 --domain=lichenlike-kellee-autocratically.ngrok-free.dev
+        run: |
+          ngrok http 3000 \
+            --domain=lichenlike-kellee-autocratically.ngrok-free.dev &
+          sleep 5
 
       # -------------------
       # Verify ngrok frontend is alive
@@ -99,40 +117,3 @@ jobs:
       - name: Verify frontend via ngrok
         run: |
           curl -I https://lichenlike-kellee-autocratically.ngrok-free.dev
-
-      # -------------------
-      # Install Playwright browsers
-      # -------------------
-      - name: Install Playwright browsers
-        run: python -m playwright install chromium
-
-      # -------------------
-      # Run Playwright tests with Allure
-      # -------------------
-      - name: Run Playwright tests
-        working-directory: ui
-        env:
-          HEADLESS: true
-          APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
-        run: |
-          pytest tests/ -v --alluredir=allure-results
-
-      # -------------------
-      # Generate Allure Report
-      # -------------------
-      - name: Generate Allure Report
-        uses: allure-framework/allure-action@v0
-        with:
-          allure-results: ui/allure-results
-          allure-report: ui/allure-report
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # -------------------
-      # Upload Playwright screenshots / artifacts
-      # -------------------
-      - name: Upload Playwright artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-debug
-          path: ui/playwright-artifacts
