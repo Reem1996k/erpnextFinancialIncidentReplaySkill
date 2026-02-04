@@ -10,7 +10,7 @@ from app.ai.ai_factory import get_ai_client
 from app.integrations.client_factory import get_erp_client
 from fastapi import HTTPException, status
 
-from backend.app.models import incident
+from app.models import incident
 
 
 """
