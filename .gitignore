@@ -229,3 +229,7 @@ backend/allure-report/
 # Allure (ui)
 ui/allure-results/
 ui/allure-report/
+
+# Coverage
+coverage.xml
+.coverage

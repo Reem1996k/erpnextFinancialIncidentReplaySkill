@@ -9,4 +9,6 @@ jinja2
 requests
 python-dotenv
 allure-pytest
+pytest-cov
+
 

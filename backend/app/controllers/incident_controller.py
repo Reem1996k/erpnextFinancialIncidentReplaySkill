@@ -98,25 +98,37 @@ def get_all_incidents(db: Session) -> list[Incident]:
 """
 def resolve_incident(incident_id: int, db: Session) -> Incident | None:
     logger = logging.getLogger(__name__)
-    
+
+    logger.info("=== resolve_incident START ===")
+    logger.info(f"Incident ID: {incident_id}")
+
     incident = get_incident_by_id(incident_id, db)
     if incident is None:
+        logger.warning(f"Incident {incident_id} not found")
         return None
-    
-    # Parse AI_ENABLED as boolean
-    ai_enabled = os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
-    
+
+    raw_ai_enabled = os.getenv("AI_ENABLED")
+    logger.info(f"Raw AI_ENABLED env value: {raw_ai_enabled!r}")
+    print(f"[DEBUG] Raw AI_ENABLED: {raw_ai_enabled}", flush=True)
+
+    ai_enabled = str(raw_ai_enabled).strip().lower() in ("true", "1", "yes", "on")
+    logger.info(f"Parsed AI_ENABLED (boolean): {ai_enabled}")
+    print(f"[DEBUG] Parsed AI_ENABLED: {ai_enabled}", flush=True)
     if not ai_enabled:
-        logger.error(f"AI_ENABLED is false - cannot resolve incident {incident_id}")
+        logger.error(
+            f"AI_DISABLED – cannot resolve incident {incident_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI analysis is disabled. Set AI_ENABLED=true to use this feature."
         )
-    
-    # AI path
-    logger.info(f"resolve_incident: AI path for incident {incident_id}")
+
+    logger.info(
+        f"AI_ENABLED – proceeding with AI resolution for incident {incident_id}"
+    )
+
     return _resolve_with_ai(incident, incident_id, db)
-    
+
 
 """
     Resolve using AI analysis only.

@@ -43,9 +43,25 @@ jobs:
       - name: Start backend server
         working-directory: backend
         run: |
-          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          AI_ENABLED=true \
+          AI_PROVIDER=claude \
+          CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }} \
+          ERP_CLIENT_MODE=real \
+          ERPNEXT_BASE_URL=${{ secrets.ERPNEXT_BASE_URL }} \
+          ERPNEXT_API_TOKEN=${{ secrets.ERPNEXT_API_TOKEN }} \
+          python -m uvicorn app.main:app \
+            --host 127.0.0.1 \
+            --port 8000 \
+            --log-level debug &
           sleep 5
           curl -f http://127.0.0.1:8000/health || echo "Backend started"
+
+      
+      - name: Debug AI status from backend
+        run: |
+          echo "=== DEBUG AI STATUS ==="
+          curl http://127.0.0.1:8000/incidents/debug/ai
+
 
       # -------------------
       # Install UI / Playwright dependencies
@@ -78,6 +94,26 @@ jobs:
       - name: Generate Allure Report
         uses: allure-framework/allure-action@v0
         with:
-          allure-results: ui/allure-results
-          allure-report: ui/allure-report
+          report-directory: ui/allure-results
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------
+      # Upload coverage reports to Codecov
+      # -------------------
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+            # -------------------
+      # Upload Playwright artifacts
+      # -------------------
+      - name: Upload Playwright artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-debug
+          path: ui/playwright-artifacts
+
+  
+
