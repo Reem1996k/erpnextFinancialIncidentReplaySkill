@@ -92,6 +92,9 @@ def debug_ai():
             "ai_enabled": os.getenv("AI_ENABLED", "").lower() == "true",
             "provider_valid": os.getenv("AI_PROVIDER", "").lower() == "claude",
             "api_key_present": bool(os.getenv("CLAUDE_API_KEY")),
+            "ERP_CLIENT_MODE": os.getenv("ERP_CLIENT_MODE"),
+            "ERPNEXT_BASE_URL_SET": bool(os.getenv("ERPNEXT_BASE_URL")),
+            "ERPNEXT_API_TOKEN_SET": bool(os.getenv("ERPNEXT_API_TOKEN")),
         }
     }
 
