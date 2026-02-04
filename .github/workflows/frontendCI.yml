@@ -53,7 +53,7 @@ jobs:
       - name: Debug AI status from backend
         run: |
           echo "=== DEBUG AI STATUS ==="
-          curl http://127.0.0.1:8000/debug/ai
+          curl http://127.0.0.1:8000/incidents/debug/ai
 
 
       # -------------------
