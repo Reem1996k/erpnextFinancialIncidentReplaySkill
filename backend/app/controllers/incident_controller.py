@@ -105,7 +105,7 @@ def resolve_incident(incident_id: int, db: Session) -> Incident | None:
     
     # Parse AI_ENABLED as boolean
     ai_enabled = os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
-    
+    logger.info(f"Parsed AI_ENABLED: {ai_enabled}")
     if not ai_enabled:
         logger.error(f"AI_ENABLED is false - cannot resolve incident {incident_id}")
         raise HTTPException(
