@@ -10,6 +10,8 @@ from app.ai.ai_factory import get_ai_client
 from app.integrations.client_factory import get_erp_client
 from fastapi import HTTPException, status
 
+from backend.app.models import incident
+
 
 """
     Create a new incident in the database.
@@ -96,26 +98,27 @@ def get_all_incidents(db: Session) -> list[Incident]:
         HTTPException: 503 if AI_ENABLED is false
         HTTPException: 404 if incident not found
 """
-def resolve_incident(incident_id: int, db: Session) -> Incident | None:
+def resolve_incident(incident_id: int, db: Session):
     logger = logging.getLogger(__name__)
-    
-    incident = get_incident_by_id(incident_id, db)
-    if incident is None:
-        return None
-    
-    # Parse AI_ENABLED as boolean
-    ai_enabled = os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
-    logger.info(f"Parsed AI_ENABLED: {ai_enabled}")
+
+    logger.info("=== resolve_incident CALLED ===")
+
+    raw_value = os.getenv("AI_ENABLED")
+    logger.info(f"AI_ENABLED raw value: {raw_value!r}")
+
+    ai_enabled = str(raw_value).strip().lower() in ("true", "1", "yes", "on")
+    logger.info(f"AI_ENABLED parsed to bool: {ai_enabled}")
+
     if not ai_enabled:
-        logger.error(f"AI_ENABLED is false - cannot resolve incident {incident_id}")
+        logger.error("AI is DISABLED – stopping here")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=503,
             detail="AI analysis is disabled. Set AI_ENABLED=true to use this feature."
         )
-    
-    # AI path
-    logger.info(f"resolve_incident: AI path for incident {incident_id}")
+
+    logger.info("AI is ENABLED – going to AI resolver")
     return _resolve_with_ai(incident, incident_id, db)
+
     
 
 """
