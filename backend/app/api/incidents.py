@@ -86,5 +86,12 @@ async def get_incident(
 def debug_ai():
     return {
         "AI_ENABLED_RAW": os.getenv("AI_ENABLED"),
-        "AI_ENABLED_PARSED": os.getenv("AI_ENABLED", "").strip().lower() in ("true", "1", "yes", "on")
+        "AI_PROVIDER_RAW": os.getenv("AI_PROVIDER"),
+        "CLAUDE_API_KEY_SET": bool(os.getenv("CLAUDE_API_KEY")),
+        "AI_VALIDATION": {
+            "ai_enabled": os.getenv("AI_ENABLED", "").lower() == "true",
+            "provider_valid": os.getenv("AI_PROVIDER", "").lower() == "claude",
+            "api_key_present": bool(os.getenv("CLAUDE_API_KEY")),
+        }
     }
+

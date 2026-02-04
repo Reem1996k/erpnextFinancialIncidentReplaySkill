@@ -43,7 +43,10 @@ jobs:
       - name: Start backend server
         working-directory: backend
         run: |
-          AI_ENABLED=true python -m uvicorn app.main:app \
+          AI_ENABLED=true \
+          AI_PROVIDER=claude \
+          CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }} \
+          python -m uvicorn app.main:app \
             --host 127.0.0.1 \
             --port 8000 \
             --log-level debug &
