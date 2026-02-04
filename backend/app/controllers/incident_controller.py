@@ -109,10 +109,11 @@ def resolve_incident(incident_id: int, db: Session) -> Incident | None:
 
     raw_ai_enabled = os.getenv("AI_ENABLED")
     logger.info(f"Raw AI_ENABLED env value: {raw_ai_enabled!r}")
+    print(f"[DEBUG] Raw AI_ENABLED: {raw_ai_enabled}", flush=True)
 
     ai_enabled = str(raw_ai_enabled).strip().lower() in ("true", "1", "yes", "on")
     logger.info(f"Parsed AI_ENABLED (boolean): {ai_enabled}")
-
+    print(f"[DEBUG] Parsed AI_ENABLED: {ai_enabled}", flush=True)
     if not ai_enabled:
         logger.error(
             f"AI_DISABLED – cannot resolve incident {incident_id}"
