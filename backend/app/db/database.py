@@ -1,12 +1,16 @@
-# Create a SQLite database connection using SQLAlchemy
-# The database should be local (sqlite:///./app.db)
-# Expose a SessionLocal and Base object
-
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Database URL
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+# Load .env before reading DATABASE_URL
+backend_dir = Path(__file__).parent.parent.parent
+env_path = backend_dir / ".env"
+load_dotenv(dotenv_path=env_path)
+
+# Database URL - use environment variable or default to app.db
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
 # Create engine
 engine = create_engine(
