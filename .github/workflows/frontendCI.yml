@@ -78,27 +78,15 @@ jobs:
         run: python -m playwright install chromium
 
       # -------------------
-      # Run SMOKE tests first
+      # Run Playwright tests with Allure
       # -------------------
-      - name: Run Smoke Tests
+      - name: Run Playwright tests
         working-directory: ui
         env:
           HEADLESS: true
           APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
         run: |
-          pytest tests/ -v -m smoke --alluredir=allure-results
-
-      # -------------------
-      # Run E2E + Feature tests (only if smoke passed)
-      # -------------------
-      - name: Run E2E & Feature Tests
-        working-directory: ui
-        env:
-          HEADLESS: true
-          APP_URL: https://lichenlike-kellee-autocratically.ngrok-free.dev
-        run: |
-          pytest tests/ -v -m "e2e or feature" --alluredir=allure-results
-
+          pytest tests/ -v --alluredir=allure-results
 
       # -------------------
       # Generate Allure Report
