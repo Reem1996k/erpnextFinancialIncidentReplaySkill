@@ -42,8 +42,8 @@ class IncidentPage:
     def wait_for_resolved(self):
         try:
             expect(
-                self.page.get_by_text("Resolved")
-            ).to_be_visible(timeout=60000)
+        self.page.get_by_test_id("incident-status")
+    ).to_have_text("Resolved", timeout=60000)
         except AssertionError:
             self._debug_snapshot("analysis_not_resolved")
 
