@@ -234,3 +234,8 @@ ui/allure-report/
 coverage.xml
 .coverage
 backend/test_ui.db
+
+# Databases
+*.db
+backend/*.db
+ui/*.db
