@@ -41,6 +41,7 @@ class IncidentPage:
 
     def wait_for_resolved(self):
         try:
+            
             expect(
                 self.page.get_by_text("Resolved")
             ).to_be_visible(timeout=60000)
