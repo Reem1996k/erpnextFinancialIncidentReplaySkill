@@ -233,3 +233,4 @@ ui/allure-report/
 # Coverage
 coverage.xml
 .coverage
+test_ui.db
