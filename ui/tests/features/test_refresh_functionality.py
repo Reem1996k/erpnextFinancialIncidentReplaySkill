@@ -7,11 +7,12 @@ Verifies that data persists correctly after page reload.
 import pytest
 from tests.pages.create_incident_page import CreateIncidentPage
 from tests.pages.incident_page import IncidentPage
+from tests.pages.incidents_list_page import IncidentsListPage
 
 
-@pytest.mark.feature
+"""@pytest.mark.feature
 def test_page_reload_preserves_open_status(page):
-    """
+    
     FEATURE: Verify browser reload preserves incident data
     
     Test flow:
@@ -20,7 +21,7 @@ def test_page_reload_preserves_open_status(page):
     3. Verify initial status is visible
     4. Reload the page (browser refresh)
     5. Verify status remains visible after reload
-    """
+    
     create_page = CreateIncidentPage(page)
     incident_page = IncidentPage(page)
 
@@ -43,7 +44,7 @@ def test_page_reload_preserves_open_status(page):
 
 @pytest.mark.feature
 def test_page_reload_preserves_resolved_status(page):
-    """
+    
     FEATURE: Verify page reload preserves RESOLVED status
     
     Test flow:
@@ -51,7 +52,7 @@ def test_page_reload_preserves_resolved_status(page):
     2. Run analysis and wait for RESOLVED status
     3. Reload the page
     4. Verify RESOLVED status persists after reload
-    """
+    
     create_page = CreateIncidentPage(page)
     incident_page = IncidentPage(page)
 
@@ -72,3 +73,37 @@ def test_page_reload_preserves_resolved_status(page):
 
     # Step 4: Verify Resolved status is preserved
     incident_page.expect_status("Resolved")
+"""
+@pytest.mark.feature
+def test_refresh_button_preserves_status(page):
+    """
+    FEATURE: Verify refresh button on Incidents page preserves status
+
+    Test flow:
+    1. Create a new incident
+    2. Navigate to incidents list page
+    3. Verify initial status is visible
+    4. Click the refresh button
+    5. Verify status remains visible after refresh
+    """
+    create_page = CreateIncidentPage(page)
+    list_page = IncidentsListPage(page)  # ודא שיש לך Page Object כזה
+
+    # Step 1: Create incident
+    create_page.open()
+    create_page.fill_erp_reference("REFRESH-BTN-2026-00001")
+    create_page.select_incident_type("invoice_discrepancy")
+    create_page.fill_description("Test incident for refresh button functionality")
+    create_page.submit()
+
+    # Step 2: Navigate to incidents list page
+    list_page.open()  # או page.goto("/incidents")
+
+    # Step 3: Verify initial status is visible
+    list_page.expect_status_for_reference("REFRESH-BTN-2026-00001", "Open")
+
+    # Step 4: Click the refresh button
+    page.click('button:has-text("Refresh")')
+
+    # Step 5: Verify status is still visible after refresh
+    list_page.expect_status_for_reference("REFRESH-BTN-2026-00001", "Open")

@@ -20,3 +20,8 @@ class IncidentsListPage:
         self.page.get_by_role("link", name="View").first.click()
         # Wait for navigation to incident detail page
         self.page.wait_for_url("**/incidents/*", timeout=10000)
+
+    def expect_status_for_reference(self, erp_reference: str, expected_status: str):
+            row = self.page.locator(f'tr:has-text("{erp_reference}")')
+            status_cell = row.locator('td').nth(2)  # עדכן אינדקס אם צריך
+            assert status_cell.inner_text().strip().upper() == expected_status.upper()
